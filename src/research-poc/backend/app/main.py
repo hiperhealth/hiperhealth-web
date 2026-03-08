@@ -1,15 +1,32 @@
 """FastAPI backend for patient data management and wearable file uploads."""
 
+import logging
 import os
 
 from typing import List
 
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile, status
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    HTTPException,
+    Request,
+    UploadFile,
+    status,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from sqlalchemy.orm import Session
 
 from . import crud, database, models, schemas, utils
+
+logger = logging.getLogger(__name__)
+
+# Maximum allowed request body size.
+# Applies to all routes.
+MAX_REQUEST_BYTES: int = int(
+    os.getenv('MAX_REQUEST_BYTES', '52428800')
+)  # 50 MB
 
 UPLOAD_DIR = os.path.join(os.path.dirname(__file__), 'uploads')
 utils.ensure_upload_dir(UPLOAD_DIR)
@@ -23,6 +40,30 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+
+@app.middleware('http')
+async def limit_request_body_size(request: Request, call_next):
+    """Reject requests whose body exceeds MAX_REQUEST_BYTES."""
+    content_length = request.headers.get('content-length')
+    if content_length is not None:
+        try:
+            if int(content_length) > MAX_REQUEST_BYTES:
+                return JSONResponse(
+                    status_code=413,
+                    content={'detail': 'Request body too large'},
+                )
+        except ValueError:
+            pass
+
+    body = await request.body()
+    if len(body) > MAX_REQUEST_BYTES:
+        return JSONResponse(
+            status_code=413,
+            content={'detail': 'Request body too large'},
+        )
+
+    return await call_next(request)
 
 
 @app.on_event('startup')
