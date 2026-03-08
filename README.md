@@ -1,16 +1,20 @@
 # hiperhealth-web
 
-`hiperhealth-web` is a physician-facing web application for running structured consultations with AI-assisted diagnostics and exam suggestions.
+`hiperhealth-web` is a physician-facing web application for running structured
+consultations with AI-assisted diagnostics and exam suggestions.
 
 It includes:
+
 - A FastAPI backend (`src/research/backend`)
 - A React + Vite frontend (`src/research/frontend`)
 - A local SQLite database for persistence
 
 ## Features
 
-- Multi-step clinical workflow (demographics, lifestyle, symptoms, mental health, reports, wearable data, diagnosis, exams)
-- AI differential diagnosis and exam recommendations via the `hiperhealth` package
+- Multi-step clinical workflow (demographics, lifestyle, symptoms, mental
+  health, reports, wearable data, diagnosis, exams)
+- AI differential diagnosis and exam recommendations via the `hiperhealth`
+  package
 - Medical report upload and extraction
 - Wearable data upload and parsing
 - De-identification before final persistence
@@ -81,6 +85,7 @@ npm run dev
 ```
 
 Default dev URLs:
+
 - Backend: `http://localhost:8000`
 - Frontend: `http://localhost:5173`
 
@@ -110,6 +115,7 @@ Typical physician flow:
 9. `GET /api/consultations/{patient_id}/exams` then `POST /exams`
 
 Useful utility endpoints:
+
 - `GET /api/health`
 - `GET /api/patients`
 - `GET /api/consultations/{patient_id}/status`
@@ -145,12 +151,12 @@ mkdocs serve --watch docs --config-file mkdocs.yaml
 
 ## Troubleshooting
 
-- `ModuleNotFoundError: No module named 'dotenv'`:
-  install it with `pip install python-dotenv`.
-- AI endpoints fail or return provider errors:
-  verify `OPENAI_API_KEY` in your `.env` files.
-- Upload extraction errors:
-  confirm `tesseract` and `libmagic` are installed in your environment.
+- `ModuleNotFoundError: No module named 'dotenv'`: install it with
+  `pip install python-dotenv`.
+- AI endpoints fail or return provider errors: verify `OPENAI_API_KEY` in your
+  `.env` files.
+- Upload extraction errors: confirm `tesseract` and `libmagic` are installed in
+  your environment.
 
 ## License
 
