@@ -52,6 +52,7 @@ dev = [
   "vulture >=2.7",
   "ipython >=8",
   "ipykernel >=6.0.0",
+  "setuptools >=70.1.0",
   "mkdocs >=1.4.3",
   "mkdocs-exclude >=1.0.2",
   "mkdocs-jupyter >=0.24.1",
