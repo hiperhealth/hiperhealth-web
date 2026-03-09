@@ -306,7 +306,6 @@ class ConsultationStatusResponse(BaseModel):
         default_factory=dict,
         description='UI-friendly data structured by category.',
         alias='formData',
-        populate_by_name=True,
     )
     lang: str = Field(..., description="Language code, e.g. 'en' or 'es'.")
 

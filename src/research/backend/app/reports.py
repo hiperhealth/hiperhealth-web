@@ -2,7 +2,7 @@
 
 import logging
 
-from typing import List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from fastapi import UploadFile
 from hiperhealth.agents.extraction.medical_reports import (
@@ -13,7 +13,7 @@ from hiperhealth.agents.extraction.medical_reports import (
 logger = logging.getLogger(__name__)
 
 
-def load_fhir_reports(consultation) -> List[dict]:
+def load_fhir_reports(consultation: Any) -> List[Dict[str, Any]]:
     """Load and deserialize FHIR reports from consultation."""
     reports = consultation.previous_tests
 
@@ -27,7 +27,11 @@ def load_fhir_reports(consultation) -> List[dict]:
     return reports
 
 
-def save_fhir_reports(consultation, reports: List[dict], repo) -> None:
+def save_fhir_reports(
+    consultation: Any,
+    reports: List[Dict[str, Any]],
+    repo: Any,
+) -> None:
     """Save FHIR reports to consultation."""
     try:
         consultation.previous_tests = reports
@@ -41,11 +45,11 @@ def save_fhir_reports(consultation, reports: List[dict], repo) -> None:
 
 def validate_report_file(
     report: UploadFile,
-    seen_filenames: set,
+    seen_filenames: Set[str],
     extractor: MedicalReportFileExtractor,
 ) -> Tuple[bool, Optional[str]]:
     """Validate uploaded report file."""
-    filename_lower = report.filename.lower()
+    filename_lower = report.filename.lower() if report.filename else ''
 
     if filename_lower in seen_filenames:
         return False, 'File already uploaded'
@@ -62,9 +66,9 @@ def validate_report_file(
 
 async def process_uploaded_reports(
     reports: List[UploadFile],
-    seen_filenames: set,
+    seen_filenames: Set[str],
     extractor: MedicalReportFileExtractor,
-) -> Tuple[List[dict], Optional[str]]:
+) -> Tuple[List[Dict[str, Any]], Optional[str]]:
     """Process uploaded medical reports and extract FHIR data."""
     fhir_reports = []
 

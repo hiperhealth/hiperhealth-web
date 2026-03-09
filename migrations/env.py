@@ -10,7 +10,9 @@ from hiperhealth.models.sqla.fhirx import Base
 from sqlalchemy import engine_from_config, pool
 
 # Ensure the backend app package is importable
-_backend_dir = str(Path(__file__).resolve().parents[1] / 'src' / 'research' / 'backend')
+_backend_dir = str(
+    Path(__file__).resolve().parents[1] / 'src' / 'research' / 'backend'
+)
 if _backend_dir not in sys.path:
     sys.path.insert(0, _backend_dir)
 

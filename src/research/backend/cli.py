@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import questionary
 import typer
@@ -36,7 +36,9 @@ app = typer.Typer(add_completion=False)
 @app.command('consult')
 def consult() -> None:
     """Interactive consultation workflow."""
-    meta = {'timestamp': datetime.now(UTC).isoformat(timespec='seconds')}
+    meta = {
+        'timestamp': datetime.now(timezone.utc).isoformat(timespec='seconds')
+    }
     patient: dict[str, Any] = {}
 
     # ── inputs ──────────────────────────────────────────────────────────
@@ -62,13 +64,25 @@ def consult() -> None:
     patient['previous_tests'] = typer.prompt("Summary or 'none'")
 
     # ── LLM calls via agents ────────────────────────────────────────────
-    diag_json = diag.differential(patient)
+    diag_result = diag.differential(patient)
+    diag_json = cast(
+        dict[str, Any],
+        diag_result.model_dump()
+        if hasattr(diag_result, 'model_dump')
+        else diag_result,
+    )
     print(f'\n[bold magenta]AI summary:[/bold magenta] {diag_json["summary"]}')
     chosen_diag = multiselect(
         'Select diagnoses to investigate', diag_json['options']
     )
 
-    exam_json = diag.exams(chosen_diag)
+    exam_result = diag.exams(chosen_diag)
+    exam_json = cast(
+        dict[str, Any],
+        exam_result.model_dump()
+        if hasattr(exam_result, 'model_dump')
+        else exam_result,
+    )
     print(f'\n[bold magenta]AI summary:[/bold magenta] {exam_json["summary"]}')
     chosen_exams = multiselect('Select exams to request', exam_json['options'])
 

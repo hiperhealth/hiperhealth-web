@@ -25,7 +25,7 @@ import uuid
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Generator, List, Optional
 
 from dotenv import load_dotenv
 
@@ -88,7 +88,7 @@ APP_DIR = Path(__file__).parent
 
 
 # --- Database Dependency Setup ---
-def get_db():
+def get_db() -> Generator[Any, None, None]:
     """Get a database session."""
     db = SessionLocal()
     try:
@@ -126,7 +126,7 @@ app.add_middleware(
 
 
 # --- Helper Functions ---
-def extract_medical_reports_for_ui(consultation) -> List[Dict[str, Any]]:
+def extract_medical_reports_for_ui(consultation: Any) -> List[Dict[str, Any]]:
     """Help to format reports for the UI."""
     formatted_reports = []
     fhir_reports = load_fhir_reports(consultation)
@@ -241,7 +241,7 @@ def patient_to_dict(patient: Patient) -> Dict[str, Any]:
         ]
         for field in consultation_fields:
             if hasattr(consultation, field):
-                patient_dict['patient'][field] = getattr(consultation, field)
+                patient_dict['patient'][field] = getattr(consultation, field)  # type: ignore[call-overload]
 
     return patient_dict
 
@@ -400,7 +400,7 @@ def _get_next_step(patient: Patient) -> str:
 
 # Health check
 @app.get('/api/health', response_model=HealthResponse)
-def health_check():
+def health_check() -> HealthResponse:
     """Health check endpoint."""
     return HealthResponse(
         status='ok',
@@ -413,7 +413,7 @@ def health_check():
 def create_new_patient(
     req: CreatePatientRequest,
     repo: ResearchRepository = Depends(get_repository),
-):
+) -> CreatePatientResponse:
     """Create a new patient and start a new consultation."""
     patient_uuid = str(uuid.uuid4())
     new_patient_record = {
@@ -430,7 +430,9 @@ def create_new_patient(
 
 # Get all patients
 @app.get('/api/patients', response_model=List[PatientSummary])
-def get_all_patients(repo: ResearchRepository = Depends(get_repository)):
+def get_all_patients(
+    repo: ResearchRepository = Depends(get_repository),
+) -> List[PatientSummary]:
     """Get list of all patients for dashboard."""
     patients = repo.list_patients()
     patients_data = []
@@ -454,7 +456,7 @@ def get_all_patients(repo: ResearchRepository = Depends(get_repository)):
 def delete_patient(
     patient_id: str,
     repo: ResearchRepository = Depends(get_repository),
-):
+) -> DeleteResponse:
     """Delete a patient record."""
     success = repo.delete_patient(patient_id)
     if not success:
@@ -469,7 +471,7 @@ def delete_patient(
 )
 def get_consultation_status(
     patient_id: str, repo: ResearchRepository = Depends(get_repository)
-):
+) -> ConsultationStatusResponse:
     """Get the current step and all patient data."""
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
@@ -517,7 +519,7 @@ def submit_demographics(
     patient_id: str,
     data: DemographicsRequest,
     repo: ResearchRepository = Depends(get_repository),
-):
+) -> StepResponse:
     """Save demographics and return next step."""
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
@@ -544,7 +546,7 @@ def submit_lifestyle(
     patient_id: str,
     data: LifestyleRequest,
     repo: ResearchRepository = Depends(get_repository),
-):
+) -> StepResponse:
     """Save lifestyle data and return next step."""
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
@@ -571,7 +573,7 @@ def submit_symptoms(
     patient_id: str,
     data: SymptomsRequest,
     repo: ResearchRepository = Depends(get_repository),
-):
+) -> StepResponse:
     """Save symptoms data and return next step."""
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
@@ -595,7 +597,7 @@ def submit_mental_health(
     patient_id: str,
     data: MentalHealthRequest,
     repo: ResearchRepository = Depends(get_repository),
-):
+) -> StepResponse:
     """Save mental health data and return next step."""
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
@@ -620,7 +622,7 @@ async def upload_medical_reports(
     patient_id: str,
     files: List[UploadFile] = File(...),
     repo: ResearchRepository = Depends(get_repository),
-):
+) -> MedicalReportUploadResponse:
     """Upload and process previous medical reports."""
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
@@ -671,7 +673,7 @@ async def upload_medical_reports(
 def skip_medical_reports(
     patient_id: str,
     repo: ResearchRepository = Depends(get_repository),
-):
+) -> MedicalReportSkipResponse:
     """Skip medical reports upload step."""
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
@@ -694,7 +696,7 @@ def skip_medical_reports(
 def get_medical_reports(
     patient_id: str,
     repo: ResearchRepository = Depends(get_repository),
-):
+) -> MedicalReportListResponse:
     """Get summary of uploaded medical reports."""
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
@@ -727,11 +729,11 @@ async def upload_wearable_data(
     patient_id: str,
     file: UploadFile = File(...),
     repo: ResearchRepository = Depends(get_repository),
-):
+) -> StepResponse:
     """Upload and Process wearable data."""
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
-        raise HTTPException(status_code=404, detai='Patient not found')
+        raise HTTPException(status_code=404, detail='Patient not found')
 
     consultation = patient.consultations[-1]
 
@@ -765,7 +767,7 @@ async def upload_wearable_data(
 def skip_wearable_data(
     patient_id: str,
     repo: ResearchRepository = Depends(get_repository),
-):
+) -> WearableDataSkipResponse:
     """Skip wearable data upload."""
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
@@ -787,7 +789,7 @@ def skip_wearable_data(
 )
 def get_diagnosis_suggestions(
     patient_id: str, repo: ResearchRepository = Depends(get_repository)
-):
+) -> DiagnosisGetResponse:
     """Get AI-generated differential diagnosis suggestions."""
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
@@ -828,7 +830,7 @@ def submit_diagnosis_selection(
     patient_id: str,
     req: DiagnosisSubmitRequest,
     repo: ResearchRepository = Depends(get_repository),
-):
+) -> DiagnosisSubmitResponse:
     """Save selected diagnosis and evaluations."""
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
@@ -851,7 +853,7 @@ def submit_diagnosis_selection(
 )
 def get_exam_suggestions(
     patient_id: str, repo: ResearchRepository = Depends(get_repository)
-):
+) -> ExamGetResponse:
     """Get AI-generated exam suggestions."""
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
@@ -889,7 +891,7 @@ def submit_exams_selection(
     req: ExamSubmitRequest,
     deidentifier: Deidentifier = Depends(get_deidentifier),
     repo: ResearchRepository = Depends(get_repository),
-):
+) -> ExamSubmitResponse:
     """Save selected exams and finalize record with deidentification."""
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
