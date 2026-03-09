@@ -6,10 +6,10 @@ channels:
 dependencies:
   - python >=3.10,<=3.13
   - pip
-  - setuptools
   - nodejs # used by semantic-release
   - tesseract
   - libmagic
   - uv
   - pip:
+      - setuptools >=70.1.0,<72
       - paginate==0.5.6 # distlib issue
