@@ -99,7 +99,10 @@ export default function Symptoms() {
         <div className="mb-4">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <small className="text-muted fw-semibold">Step 3 of 10</small>
-            <small className="text-muted">30% Complete</small>
+            <div className="d-flex align-items-center gap-3">
+              <small className="text-muted">30% Complete</small>
+              <Button variant="outline-secondary" size="sm" onClick={() => navigate('/')} title="Back to Dashboard">🏠</Button>
+            </div>
           </div>
           <ProgressBar now={30} style={{ height: '8px' }} className="mb-3" />
         </div>
@@ -252,7 +255,7 @@ export default function Symptoms() {
               <div className="d-flex justify-content-between align-items-center pt-4 border-top">
                 <Button
                   variant="outline-secondary"
-                  onClick={() => navigate(-1)}
+                  onClick={() => navigate('/lifestyle')}
                   size="lg"
                   disabled={isSubmitting}
                 >
