@@ -33,15 +33,6 @@ case "$OS" in
     ;;
 esac
 
+# Install package with dev dependencies
+# Frontend dependencies are now installed automatically via setup.py
 pip install ".[dev]"
-
-# Install frontend dependencies
-if ! command -v npm >/dev/null 2>&1; then
-    echo "Warning: npm not found – skipping frontend dependency installation." >&2
-    echo "Install Node.js/npm to run the research frontend." >&2
-elif [ -d "src/research/frontend" ] && [ -f "src/research/frontend/package.json" ]; then
-    echo "Installing frontend dependencies …"
-    (cd src/research/frontend && { if [ -f package-lock.json ]; then npm ci --no-audit --no-fund; else npm install --no-audit --no-fund; fi; })
-else
-    echo "Warning: src/research/frontend missing or no package.json – skipping frontend install." >&2
-fi
