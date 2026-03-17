@@ -147,6 +147,7 @@ cython_debug/
 
 # vscode
 .vscode/
+.qoder/
 research/backend/data
 #backend database
 research-poc/backend/backend.db
