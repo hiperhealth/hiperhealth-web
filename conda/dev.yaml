@@ -8,8 +8,8 @@ dependencies:
   - pip
   - nodejs # used by semantic-release
   - tesseract
-  - libmagic
   - uv
   - pip:
+      - python-magic-bin
       - setuptools >=70.1.0,<72
       - paginate==0.5.6 # distlib issue
