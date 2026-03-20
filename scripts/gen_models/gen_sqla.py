@@ -23,6 +23,7 @@ Notes
 
 from __future__ import annotations
 
+import argparse
 import sys
 
 from datetime import date, datetime
@@ -189,21 +190,68 @@ class Base(DeclarativeBase):
     return header + '\n\n'.join(body) + '\n'
 
 
-def main() -> None:
-    """Execute the main function."""
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parse CLI arguments for SQLAlchemy model generation."""
+    parser = argparse.ArgumentParser(
+        description='Generate SQLAlchemy ORM models from Pydantic schemas.'
+    )
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Print generated output to stdout without writing files.',
+    )
+    parser.add_argument(
+        '--output',
+        type=str,
+        help='Write generated output to a custom file path.',
+    )
+    return parser.parse_args(argv)
+
+
+def resolve_output_path(raw_output: str | None) -> Path:
+    """Resolve and validate the output path from CLI input."""
+    if not raw_output:
+        return OUTPUT_PATH
+
+    candidate = Path(raw_output).expanduser()
+    if candidate.exists() and candidate.is_dir():
+        raise ValueError(f'Output path points to a directory: {candidate}')
+
+    return candidate
+
+
+def write_generated_code(output_path: Path, generated_code: str) -> None:
+    """Write generated ORM code to a file, creating parent directories."""
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(generated_code, encoding='utf-8')
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Execute the CLI."""
+    args = parse_args(argv)
     models = iter_pydantic_models()
-    orm_code = build_orm_file(models)
+    generated_code = build_orm_file(models)
 
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT_PATH.write_text(orm_code, encoding='utf-8')
-
-    print(f'[✓] ORM models written to {OUTPUT_PATH}')
+    if args.dry_run:
+        print(generated_code, end='')
+        return 0
 
     try:
-        run_ruff(OUTPUT_PATH, fix=True)
+        output_path = resolve_output_path(args.output)
+        write_generated_code(output_path, generated_code)
+    except (OSError, ValueError) as err:
+        print(f'[x] Failed to write ORM models: {err}', file=sys.stderr)
+        return 1
+
+    print(f'[✓] ORM models written to {output_path}')
+
+    try:
+        run_ruff(output_path, fix=True)
     except RuntimeError as err:
         # Fallback: continue without failing the generator
         print(f'[!] Ruff step skipped: {err}')
+
+    return 0
 
 
 if __name__ == '__main__':
