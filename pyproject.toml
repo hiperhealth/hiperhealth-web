@@ -41,6 +41,9 @@ where = ["src"]
 
 
 [project.optional-dependencies]
+nlp-spacy = [
+    "spacy >=3.7,<4",
+]
 dev = [
   "pytest >=7.3.2",
   "pytest-cov >=4.1.0",
