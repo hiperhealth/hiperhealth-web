@@ -215,7 +215,7 @@ def main() -> None:
     output_path = Path(args.output)
 
     if args.dry_run:
-        print(f"[✓] Dry-run: would write ORM models to {output_path}")
+        print(f'[✓] Dry-run: would write ORM models to {output_path}')
         print(orm_code[:1024])
         return 0
 
@@ -229,7 +229,7 @@ def main() -> None:
     except RuntimeError as err:
         # Fallback: continue without failing the generator
         print(f'[!] Ruff step skipped: {err}')
-    
+
     return 0
 
 

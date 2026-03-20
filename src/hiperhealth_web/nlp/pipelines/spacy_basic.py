@@ -8,8 +8,8 @@ from hiperhealth_web.nlp.registry import BasePipeline, register_pipeline
 class SpacyBasicPipeline(BasePipeline):
     """Tokenize text using a configurable spaCy model."""
 
-    def __init__(self, model_name: str = "en_core_web_sm") -> None:
-        self.name = "spacy_basic"
+    def __init__(self, model_name: str = 'en_core_web_sm') -> None:
+        self.name = 'spacy_basic'
         self._model_name = model_name
         self._nlp: Any = None
         self.initialized = False
@@ -25,7 +25,7 @@ class SpacyBasicPipeline(BasePipeline):
         try:
             self._nlp = spacy.load(self._model_name)
         except OSError:
-            self._nlp = spacy.blank("en")
+            self._nlp = spacy.blank('en')
         self.initialized = True
 
     def process(self, text: str) -> list[str]:
@@ -45,6 +45,6 @@ class SpacyBasicPipeline(BasePipeline):
         return self._nlp is not None
 
 
-@register_pipeline("spacy_basic")
+@register_pipeline('spacy_basic')
 def _make_spacy_basic() -> SpacyBasicPipeline:
     return SpacyBasicPipeline()
