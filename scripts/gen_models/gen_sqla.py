@@ -191,19 +191,46 @@ class Base(DeclarativeBase):
 
 def main() -> None:
     """Execute the main function."""
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description='Generate SQLAlchemy ORM models.'
+    )
+    parser.add_argument(
+        '--dry-run',
+        action='store_true',
+        help='Preview output without writing files',
+    )
+    parser.add_argument(
+        '--output',
+        type=str,
+        default=str(OUTPUT_PATH),
+        help='Target file path',
+    )
+    args = parser.parse_args()
+
     models = iter_pydantic_models()
     orm_code = build_orm_file(models)
 
-    OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUTPUT_PATH.write_text(orm_code, encoding='utf-8')
+    output_path = Path(args.output)
 
-    print(f'[✓] ORM models written to {OUTPUT_PATH}')
+    if args.dry_run:
+        print(f'[✓] Dry-run: would write ORM models to {output_path}')
+        print(orm_code[:1024])
+        return 0
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(orm_code, encoding='utf-8')
+
+    print(f'[✓] ORM models written to {output_path}')
 
     try:
-        run_ruff(OUTPUT_PATH, fix=True)
+        run_ruff(output_path, fix=True)
     except RuntimeError as err:
         # Fallback: continue without failing the generator
         print(f'[!] Ruff step skipped: {err}')
+
+    return 0
 
 
 if __name__ == '__main__':
