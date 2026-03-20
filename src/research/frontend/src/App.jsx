@@ -13,27 +13,127 @@ import Wearable from "./components/consultation/Wearable";
 import Diagnosis from "./components/consultation/Diagnosis";
 import Exam from "./components/consultation/Exam";
 import Confirmation from "./components/consultation/Confirmation";
-
+import { AuthProvider } from "./context/AuthContext";
+import Login from "./components/auth/Login";
+import Register from "./components/auth/Register";
+import PrivateRoute from "./components/auth/PrivateRoute";
 
 export default function App() {
   return (
+    <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/patients/:id" element={<PatientView />} />
-          <Route path="/language" element={<LanguageSelection />} />
-          <Route path="/demographics" element={<Demographics />} />
-          <Route path="/lifestyle" element={<Lifestyle />} />
-          <Route path="/symptoms" element={<Symptoms />} />
-          <Route path="/mental" element={<Mental />} />
-          <Route path="/medical-reports" element={<MedicalReport />} />
-          <Route path="/wearable-data" element={<Wearable />} />
-          <Route path="/diagnosis" element={<Diagnosis />} />
-          <Route path="/exams" element={<Exam />} />
-          <Route path="/confirmation" element={<Confirmation />} />
-          <Route path="*" element={<Dashboard />} />
+          {/* Public routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Protected routes */}
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/patients/:id"
+            element={
+              <PrivateRoute>
+                <PatientView />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/language"
+            element={
+              <PrivateRoute>
+                <LanguageSelection />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/demographics"
+            element={
+              <PrivateRoute>
+                <Demographics />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/lifestyle"
+            element={
+              <PrivateRoute>
+                <Lifestyle />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/symptoms"
+            element={
+              <PrivateRoute>
+                <Symptoms />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/mental"
+            element={
+              <PrivateRoute>
+                <Mental />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/medical-reports"
+            element={
+              <PrivateRoute>
+                <MedicalReport />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/wearable-data"
+            element={
+              <PrivateRoute>
+                <Wearable />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/diagnosis"
+            element={
+              <PrivateRoute>
+                <Diagnosis />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/exams"
+            element={
+              <PrivateRoute>
+                <Exam />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/confirmation"
+            element={
+              <PrivateRoute>
+                <Confirmation />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="*"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </Router>
-
+    </AuthProvider>
   );
 }

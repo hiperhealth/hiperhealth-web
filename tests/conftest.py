@@ -15,17 +15,27 @@ import pytest
 BACKEND_DIR = Path(__file__).parents[1] / 'src' / 'research' / 'backend'
 sys.path.insert(0, str(BACKEND_DIR))
 
+# Set SECRET_KEY before importing the app so auth.config does not raise.
+os.environ.setdefault('SECRET_KEY', 'test-secret-key-for-pytest')
+
+from app.auth.dependencies import _get_db as auth_get_db
 from app.main import app
+from app.models.auth import User  # noqa: F401 — registers users table
 from app.models.repositories import ResearchRepository
-from app.models.ui import Base
+from app.models.ui import (  # noqa: F401 — registers all tables
+    Consultation,
+    Patient,
+)
 from dotenv import dotenv_values, load_dotenv
 from fastapi.testclient import TestClient
 from hiperhealth.agents.extraction.medical_reports import (
     MedicalReportFileExtractor,
 )
 from hiperhealth.agents.extraction.wearable import WearableDataFileExtractor
+from hiperhealth.models.sqla.fhirx import Base
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import StaticPool
 
 
 @pytest.fixture
@@ -89,9 +99,14 @@ def medical_extractor():
     return MedicalReportFileExtractor()
 
 
-# Use an in-memory SQLite database for fast, isolated tests
+# Use StaticPool so all sessions share the same in-memory SQLite connection.
+# Without this, each new connection gets its own isolated :memory: database.
 TEST_DB_URL = 'sqlite:///:memory:'
-engine = create_engine(TEST_DB_URL, connect_args={'check_same_thread': False})
+engine = create_engine(
+    TEST_DB_URL,
+    connect_args={'check_same_thread': False},
+    poolclass=StaticPool,
+)
 TestingSessionLocal = sessionmaker(
     autocommit=False, autoflush=False, bind=engine
 )
@@ -115,7 +130,47 @@ def test_repo(db_session):
     return ResearchRepository(db_session)
 
 
+def _override_get_db():
+    """Yield an in-memory DB session for test client dependency overrides."""
+    Base.metadata.create_all(bind=engine)
+    db = TestingSessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 @pytest.fixture
 def client():
-    """FastAPI test client fixture."""
-    return TestClient(app)
+    """FastAPI test client fixture with in-memory DB overrides."""
+    from app.main import get_db as main_get_db
+
+    app.dependency_overrides[auth_get_db] = _override_get_db
+    app.dependency_overrides[main_get_db] = _override_get_db
+    Base.metadata.create_all(bind=engine)
+    tc = TestClient(app)
+    yield tc
+    app.dependency_overrides.clear()
+    Base.metadata.drop_all(bind=engine)
+
+
+@pytest.fixture
+def auth_headers(client: TestClient) -> dict[str, str]:
+    """Register and log in a test physician; return authorization headers."""
+    client.post(
+        '/api/auth/register',
+        json={
+            'username': 'testphysician',
+            'email': 'physician@test.com',
+            'password': 'testpassword123',
+        },
+    )
+    resp = client.post(
+        '/api/auth/login',
+        data={
+            'username': 'physician@test.com',
+            'password': 'testpassword123',
+        },
+    )
+    token = resp.json()['access_token']
+    return {'Authorization': f'Bearer {token}'}

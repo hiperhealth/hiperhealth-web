@@ -343,3 +343,32 @@ class HealthResponse(BaseModel):
 
     status: str = Field(..., description='Health status of the API service.')
     service: str = Field(..., description='Name of the service being checked.')
+
+
+# --- Authentication Schemas ---
+class UserRegisterRequest(BaseModel):
+    """Schema for registering a new physician user account."""
+
+    username: str = Field(..., description='Unique username for the account.')
+    email: str = Field(..., description='Email address of the user.')
+    password: str = Field(
+        ..., description='Plain-text password (min 8 chars).'
+    )
+
+
+class UserResponse(BaseModel):
+    """Public representation of a user account."""
+
+    id: int = Field(..., description='Internal user identifier.')
+    username: str = Field(..., description='Unique username.')
+    email: str = Field(..., description='Email address.')
+    is_active: bool = Field(..., description='Whether the account is active.')
+
+
+class TokenResponse(BaseModel):
+    """JWT token returned after a successful login."""
+
+    access_token: str = Field(..., description='The signed JWT access token.')
+    token_type: str = Field(
+        default='bearer', description='Token type, always "bearer".'
+    )
