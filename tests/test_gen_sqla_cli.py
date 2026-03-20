@@ -2,26 +2,38 @@
 
 from __future__ import annotations
 
-import sys
+import importlib.util
 
 from pathlib import Path
 
+GEN_SQLA_PATH = (
+    Path(__file__).resolve().parents[1]
+    / 'scripts'
+    / 'gen_models'
+    / 'gen_sqla.py'
+)
 
-SCRIPT_DIR = Path(__file__).resolve().parents[1] / 'scripts' / 'gen_models'
-if str(SCRIPT_DIR) not in sys.path:
-    sys.path.insert(0, str(SCRIPT_DIR))
 
-import gen_sqla
+def _load_gen_sqla():
+    spec = importlib.util.spec_from_file_location('gen_sqla_under_test', GEN_SQLA_PATH)
+    if spec is None or spec.loader is None:
+        raise RuntimeError('Unable to load gen_sqla module for tests.')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def test_dry_run_prints_output_and_writes_no_file(
     monkeypatch, capsys, tmp_path
 ) -> None:
     """Ensure --dry-run prints code and skips writes/ruff."""
+    gen_sqla = _load_gen_sqla()
     default_output = tmp_path / 'default' / 'fhirx.py'
     monkeypatch.setattr(gen_sqla, 'OUTPUT_PATH', default_output)
     monkeypatch.setattr(gen_sqla, 'iter_pydantic_models', lambda: {})
-    monkeypatch.setattr(gen_sqla, 'build_orm_file', lambda _models: 'GEN_CODE\n')
+    monkeypatch.setattr(
+        gen_sqla, 'build_orm_file', lambda _models: 'GEN_CODE\n'
+    )
 
     called = {'ruff': False}
 
@@ -42,6 +54,7 @@ def test_dry_run_prints_output_and_writes_no_file(
 
 def test_output_writes_to_custom_path(monkeypatch, tmp_path, capsys) -> None:
     """Ensure --output writes file to custom destination and runs Ruff."""
+    gen_sqla = _load_gen_sqla()
     custom_output = tmp_path / 'custom' / 'models.py'
     monkeypatch.setattr(gen_sqla, 'iter_pydantic_models', lambda: {})
     monkeypatch.setattr(gen_sqla, 'build_orm_file', lambda _models: 'CUSTOM\n')
@@ -63,12 +76,17 @@ def test_output_writes_to_custom_path(monkeypatch, tmp_path, capsys) -> None:
     assert '[✓] ORM models written to' in out.out
 
 
-def test_default_behavior_uses_output_path(monkeypatch, tmp_path, capsys) -> None:
+def test_default_behavior_uses_output_path(
+    monkeypatch, tmp_path, capsys
+) -> None:
     """Ensure default behavior still writes to OUTPUT_PATH and runs Ruff."""
+    gen_sqla = _load_gen_sqla()
     default_output = tmp_path / 'default' / 'fhirx.py'
     monkeypatch.setattr(gen_sqla, 'OUTPUT_PATH', default_output)
     monkeypatch.setattr(gen_sqla, 'iter_pydantic_models', lambda: {})
-    monkeypatch.setattr(gen_sqla, 'build_orm_file', lambda _models: 'DEFAULT\n')
+    monkeypatch.setattr(
+        gen_sqla, 'build_orm_file', lambda _models: 'DEFAULT\n'
+    )
 
     calls: list[Path] = []
 
@@ -91,8 +109,11 @@ def test_output_directory_path_fails_gracefully(
     monkeypatch, tmp_path, capsys
 ) -> None:
     """Ensure invalid output path (directory) returns a non-zero exit code."""
+    gen_sqla = _load_gen_sqla()
     monkeypatch.setattr(gen_sqla, 'iter_pydantic_models', lambda: {})
-    monkeypatch.setattr(gen_sqla, 'build_orm_file', lambda _models: 'IGNORED\n')
+    monkeypatch.setattr(
+        gen_sqla, 'build_orm_file', lambda _models: 'IGNORED\n'
+    )
 
     target_dir = tmp_path / 'outdir'
     target_dir.mkdir(parents=True, exist_ok=True)
