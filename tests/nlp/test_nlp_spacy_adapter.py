@@ -10,7 +10,7 @@ pytest.importorskip("spacy")
 def test_spacy_basic_pipeline_registration_and_lazy_init():
     """Ensure registration occurs and initialization is lazy."""
     importlib.import_module("hiperhealth_web.nlp.pipelines.spacy_basic")
-    from hiperhealth.nlp import get_pipeline
+    from hiperhealth_web.nlp import get_pipeline
 
     pipeline = get_pipeline("spacy_basic")
     assert not pipeline.initialized
@@ -24,7 +24,7 @@ def test_spacy_basic_pipeline_registration_and_lazy_init():
 def test_spacy_basic_health_check():
     """Verify health status transitions after first processing call."""
     importlib.import_module("hiperhealth_web.nlp.pipelines.spacy_basic")
-    from hiperhealth.nlp import get_pipeline
+    from hiperhealth_web.nlp import get_pipeline
 
     pipeline = get_pipeline("spacy_basic")
     assert pipeline.health_check() is False

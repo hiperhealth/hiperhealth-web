@@ -106,6 +106,9 @@ force-exclude = true
 src = ["./"]
 exclude = [
   'docs',
+  '.venv',
+  '.venv-1',
+  '.venv311',
 ]
 
 [tool.ruff.lint]
