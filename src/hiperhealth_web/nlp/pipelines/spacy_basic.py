@@ -22,7 +22,10 @@ class SpacyBasicPipeline(BasePipeline):
 
         import spacy
 
-        self._nlp = spacy.load(self._model_name)
+        try:
+            self._nlp = spacy.load(self._model_name)
+        except OSError:
+            self._nlp = spacy.blank("en")
         self.initialized = True
 
     def process(self, text: str) -> list[str]:
