@@ -2,12 +2,10 @@ import React, { useEffect } from "react";
 import { Navbar, Nav, Container, Dropdown } from "react-bootstrap";
 import { Link, NavLink, useInRouterContext } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useConsultation } from "../../context/ConsultationContext";
 
 export default function AppNavbar() {
   const { i18n, t } = useTranslation();
   const inRouter = useInRouterContext();
-  const { state } = useConsultation();
 
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
@@ -18,13 +16,6 @@ export default function AppNavbar() {
     const saved = localStorage.getItem("i18nextLng");
     if (saved) i18n.changeLanguage(saved);
   }, []);
-
-  const hasResume =
-    Boolean(state?.patientId) &&
-    Boolean(state?.currentStep) &&
-    state.currentStep !== "language-selection" &&
-    state.currentStep !== "confirmation" &&
-    !state?.isComplete;
 
   return (
     <Navbar bg="light" expand="lg" className="shadow-sm py-2">
@@ -52,18 +43,6 @@ export default function AppNavbar() {
             >
               {t("navbar.dashboard", "Patient Dashboard")}
             </Nav.Link>
-
-            {/* Resume Consultation */}
-            {hasResume && (
-              <Nav.Link
-                as={inRouter ? NavLink : "a"}
-                to={`/${state.currentStep}`}
-                href={`/${state.currentStep}`}
-                className="fw-semibold text-dark px-3"
-              >
-                {t("navbar.resumeDiagnosis", "Resume Diagnosis")}
-              </Nav.Link>
-            )}
 
             {/* Language Selector */}
             <Dropdown align="end" className="px-2">
