@@ -134,17 +134,14 @@ Please select one option for each item to indicate your choice:
 
 1. **Commercial research consent:** Use of de-identified data for commercial
    research, including AI/ML model training
-
    - [ ] I consent
    - [ ] I do not consent
 
 2. **Recontact consent:** Recontact for future studies
-
    - [ ] I wish to be recontacted
    - [ ] I do not wish to be recontacted
 
 3. **Receipt of results:** Receipt of individual research results
-
    - [ ] I wish to receive results
    - [ ] I do not wish to receive results
 
