@@ -91,7 +91,9 @@ except Exception:  # pragma: no cover - environment-dependent
 
     def deidentify_patient_record(record, deidentifier):
         """Raise error when Deidentifier is unavailable."""
-        raise RuntimeError("Deidentifier dependency not available")
+        raise RuntimeError('Deidentifier dependency not available')
+
+
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)

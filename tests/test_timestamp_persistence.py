@@ -1,11 +1,13 @@
+"""Tests for timestamp persistence in the research application."""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
-
 from uuid import uuid4
 
 
 def test_create_patient_persists_timestamp(test_repo):
+    """Test that creating a patient record correctly persists the timestamp."""
     # Create a new patient record via repository and ensure timestamp is stored
     patient_uuid = str(uuid4())
     created_at = datetime.now(timezone.utc).isoformat()
@@ -30,6 +32,4 @@ def test_create_patient_persists_timestamp(test_repo):
     stored_ts = consultation.timestamp
     if stored_ts.tzinfo is None:
         stored_ts = stored_ts.replace(tzinfo=timezone.utc)
-    assert dt_ca.replace(microsecond=0) == stored_ts.replace(
-        microsecond=0
-    )
+    assert dt_ca.replace(microsecond=0) == stored_ts.replace(microsecond=0)
