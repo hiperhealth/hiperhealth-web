@@ -2,14 +2,14 @@
 
 ## Stable release
 
-To install hiperhealth, run this command in your terminal:
+To install hiperhealth-web, run this command in your terminal:
 
 ```bash
-pip install hiperhealth
+pip install hiperhealth-web
 ```
 
-This is the preferred method to install hiperhealth, as it will always install
-the most recent stable release.
+This is the preferred method to install hiperhealth-web, as it will always
+install the most recent stable release.
 
 If you don't have [pip](https://pip.pypa.io) installed, this
 [Python installation guide](http://docs.python-guide.org/en/latest/starting/installation/)
@@ -17,20 +17,20 @@ can guide you through the process.
 
 ## From sources
 
-The sources for hiperhealth can be downloaded from the
-[Github repo](https://github.com/hiperhealth/hiperhealth).
+The sources for hiperhealth-web can be downloaded from the
+[GitHub repo](https://github.com/hiperhealth/hiperhealth-web).
 
 You can either clone the public repository:
 
 ```bash
-git clone https://github.com/hiperhealth/hiperhealth
+git clone https://github.com/hiperhealth/hiperhealth-web
 ```
 
 Or download the
-[tarball](https://github.com/hiperhealth/hiperhealth/tarball/main):
+[tarball](https://github.com/hiperhealth/hiperhealth-web/tarball/main):
 
 ```bash
-curl -OJL https://github.com/hiperhealth/hiperhealth/tarball/main
+curl -OJL https://github.com/hiperhealth/hiperhealth-web/tarball/main
 ```
 
 Once you have a copy of the source, you can install it with:

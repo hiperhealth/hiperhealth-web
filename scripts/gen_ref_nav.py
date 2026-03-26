@@ -18,9 +18,10 @@ mod_symbol = (
 
 root = Path(__file__).parent.parent
 src = root / 'src'
-for path in sorted(src.rglob('*.py')):
+pkg = src / 'hiperhealth_web'
+for path in sorted(pkg.rglob('*.py')):
     module_path = path.relative_to(src).with_suffix('')
-    doc_path = path.relative_to(src / 'hiperhealth').with_suffix('.md')
+    doc_path = path.relative_to(pkg).with_suffix('.md')
     full_doc_path = Path('api', doc_path)
 
     parts = tuple(module_path.parts)

@@ -1,14 +1,30 @@
 """Alembic environment configuration for database migrations."""
 
+import sys
+
 from logging.config import fileConfig
+from pathlib import Path
 
 from alembic import context
 from hiperhealth.models.sqla.fhirx import Base
 from sqlalchemy import engine_from_config, pool
 
+# Ensure the backend app package is importable
+_backend_dir = str(
+    Path(__file__).resolve().parents[1] / 'src' / 'research' / 'backend'
+)
+if _backend_dir not in sys.path:
+    sys.path.insert(0, _backend_dir)
+
+from app.database import SQLALCHEMY_DATABASE_URL  # noqa: E402
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
+
+# Override the cwd-relative URL from alembic.ini with the absolute path
+# computed by the application so migrations always target the correct DB.
+config.set_main_option('sqlalchemy.url', SQLALCHEMY_DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.

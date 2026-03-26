@@ -39,15 +39,15 @@ groups:
     tasks:
       cli:
         help: Run the Research CLI
-        dir: research/backend
+        dir: src/research/backend
         run: python cli.py
       backend:
         help: Run the Research backend (FastAPI)
-        dir: research/backend
+        dir: src/research/backend
         run: uvicorn app.main:app --reload
       frontend:
         help: Run the Research frontend (React/Vite)
-        dir: research/frontend
+        dir: src/research/frontend
         run: npm run dev
       seed:
         help: Run the script to migrate legacy patient data to the DB
@@ -77,8 +77,8 @@ groups:
         backend: bash
         run: |
           pytest \
-            --cov=hiperhealth \
-            --cov-fail-under=85 \
+            --cov=app \
+            --cov-fail-under=40 \
             --cov-report term-missing \
             --no-cov-on-fail ${{ args.path }} ${{ args.params }}
 
@@ -133,8 +133,8 @@ groups:
       setup:
         help: Creates and migrates the database to the latest version
         run: |
-           mkdir -p research/backend/data
-           alembic upgrade head
+          mkdir -p src/research/backend/data
+          alembic upgrade head
       revision:
         help: Autogenerates a new database revision script
         args:

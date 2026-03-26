@@ -37,7 +37,7 @@ class ResearchRepository:
 
     def list_patients(self) -> List[Patient]:
         """List all patients in the database."""
-        return self.db.query(Patient).all()
+        return self.db.query(Patient).all()  # type: ignore[no-any-return]
 
     def create_patient_and_consultation(
         self, patient_data: Dict[str, Any]

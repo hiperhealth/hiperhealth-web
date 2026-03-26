@@ -1,6 +1,6 @@
-site_name: hiperhealth
+site_name: hiperhealth-web
 site_url: https://hiperhealth.com
-repo_url: https://github.com/hiperhealth/hiperhealth
+repo_url: https://github.com/hiperhealth/hiperhealth-web
 docs_dir: ./docs/
 site_dir: ./build/
 # extra_css:
@@ -113,7 +113,7 @@ markdown_extensions:
   - tables
   - toc
 extra:
-  project_name: "hiperhealth"
+  project_name: "hiperhealth-web"
   team:
     - name: "Active maintainers"
       members:

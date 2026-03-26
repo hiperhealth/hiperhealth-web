@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-BACKEND_DIR = Path(__file__).parents[1] / 'research' / 'backend'
+BACKEND_DIR = Path(__file__).parents[1] / 'src' / 'research' / 'backend'
 sys.path.insert(0, str(BACKEND_DIR))
 
 from app.main import app

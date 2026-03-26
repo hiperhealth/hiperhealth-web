@@ -9,10 +9,13 @@ authors = [
 license = { text = "BSD 3 Clause" }
 requires-python = ">=3.10,<4"
 dependencies = [
-    "hiperhealth >=0.0.1",
+    "hiperhealth >=0.4.0",
+    "alembic >=1.13",
     "fastapi >=0.115",
     "jinja2 >=3.1.2",
+    "langchain-text-splitters >=0.3.0",
     "pydantic >=2,<3",
+    "python-dotenv >=1.0",
     "python-multipart >=0.0.20",
     "questionary >=2.1.0",
     "rich >=13",
@@ -22,8 +25,8 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/hiperhealth/hiperhealth"
-Issues = "https://github.com/hiperhealth/hiperhealth/issues"
+Homepage = "https://github.com/hiperhealth/hiperhealth-web"
+Issues = "https://github.com/hiperhealth/hiperhealth-web/issues"
 
 [build-system]
 requires = ["setuptools>=70.1.0,<80.0", "wheel"]
@@ -35,8 +38,7 @@ package-dir = { "" = "src" }
 [tool.setuptools.packages.find]
 where = ["src"]
 
-[tool.setuptools.package-data]
-hiperhealth = ["py.typed"]
+
 
 [project.optional-dependencies]
 dev = [
@@ -50,6 +52,7 @@ dev = [
   "vulture >=2.7",
   "ipython >=8",
   "ipykernel >=6.0.0",
+  "setuptools >=70.1.0",
   "mkdocs >=1.4.3",
   "mkdocs-exclude >=1.0.2",
   "mkdocs-jupyter >=0.24.1",
@@ -60,6 +63,9 @@ dev = [
   "mkdocstrings-python >= 1.1.2",
   "mkdocs-gen-files >=0.5.0",
   "makim ==1.27.0",
+  "httpx >=0.27",
+  "build >=1.0",
+  "twine >=5.0",
 ]
 
 [tool.bandit]
@@ -80,12 +86,7 @@ plugins = [
   "pydantic.mypy",
 ]
 
-[[tool.mypy.overrides]]
-module = "hiperhealth.schema.fhirx"
-disable_error_code = [
-  "name-defined",
-  "valid-type",
-]
+
 
 [tool.pytest.ini_options]
 testpaths = [
