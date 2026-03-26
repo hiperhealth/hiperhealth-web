@@ -22,7 +22,7 @@ import io
 import logging
 import uuid
 
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -90,6 +90,7 @@ except Exception:  # pragma: no cover - environment-dependent
     Deidentifier = None
 
     def deidentify_patient_record(record, deidentifier):
+        """Raise error when Deidentifier is unavailable."""
         raise RuntimeError("Deidentifier dependency not available")
 from sqlalchemy.orm import Session
 
@@ -428,7 +429,7 @@ def create_new_patient(
     """Create a new patient and start a new consultation."""
     patient_uuid = str(uuid.uuid4())
     # Persist a timestamp so repository can save the consultation timestamp
-    created_at = datetime.utcnow().isoformat()
+    created_at = datetime.now(timezone.utc).isoformat()
     new_patient_record = {
         'meta': {
             'uuid': patient_uuid,

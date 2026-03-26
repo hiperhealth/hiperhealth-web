@@ -34,7 +34,7 @@ class Consultation(Base):
     __tablename__ = 'consultations'
     id = Column(Integer, primary_key=True)
     patient_id = Column(Integer, ForeignKey('patients.id'))
-    timestamp = Column(DateTime)
+    timestamp = Column(DateTime(timezone=True))
     lang = Column(String(10))
 
     # Consultation-specific data
