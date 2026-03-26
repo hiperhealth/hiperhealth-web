@@ -12,7 +12,7 @@ from passwordlib.commonly_used import is_commonly_used
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 
 
-def contain_special_chars(input_string: str) -> bool:
+def contain_special_chars(input_string: str) -> bool:  # noqa: D103
     return any(not c.isalnum() for c in input_string)
 
 

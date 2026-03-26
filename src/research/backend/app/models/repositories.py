@@ -6,7 +6,8 @@ from uuid import UUID
 
 from sqlalchemy.orm import Session
 
-from ...models.ui import (
+from ...schema.ui import ConsultationCreate, PatientCreate
+from ..models.ui import (
     Consultation,
     ConsultationDiagnosis,
     ConsultationExam,
@@ -14,7 +15,6 @@ from ...models.ui import (
     Exam,
     Patient,
 )
-from ...schema.ui import ConsultationCreate, PatientCreate
 
 
 class ResearchRepository:

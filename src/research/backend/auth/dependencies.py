@@ -12,9 +12,9 @@ from sqlalchemy.orm import Session
 
 from ..app.database import SessionLocal
 from ..app.models.rbac import Permission, User
-from ..audit import AuditLogger
 from ..auth.rbac import RBACManager
 from ..auth.session import SessionManager
+from .audit import AuditLogger
 
 
 def get_db():
