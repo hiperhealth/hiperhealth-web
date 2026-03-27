@@ -87,9 +87,11 @@ try:
         deidentify_patient_record,
     )
 except Exception:  # pragma: no cover - environment-dependent
-    Deidentifier = None
+    Deidentifier = None  # type: ignore[assignment,misc]
 
-    def deidentify_patient_record(record, deidentifier):
+    def deidentify_patient_record(  # type: ignore[misc]
+        record: Any, deidentifier: Any
+    ) -> Any:
         """Raise error when Deidentifier is unavailable."""
         raise RuntimeError('Deidentifier dependency not available')
 
