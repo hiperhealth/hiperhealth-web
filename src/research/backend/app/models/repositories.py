@@ -1,6 +1,6 @@
 """Repositories for reading and saving the web app data."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any, Dict, List
 from uuid import UUID
 
@@ -55,9 +55,12 @@ class ResearchRepository:
 
         # Parse the timestamp string into a datetime object
         timestamp_str = patient_data['meta'].get('timestamp')
-        timestamp_obj = (
-            datetime.fromisoformat(timestamp_str) if timestamp_str else None
-        )
+        timestamp_obj = None
+        if timestamp_str:
+            timestamp_obj = datetime.fromisoformat(timestamp_str)
+            if timestamp_obj.tzinfo is None:
+                timestamp_obj = timestamp_obj.replace(tzinfo=timezone.utc)
+            timestamp_obj = timestamp_obj.astimezone(timezone.utc)
 
         consultation_schema = ConsultationCreate(
             patient_id=new_patient.id,
@@ -98,9 +101,13 @@ class ResearchRepository:
 
         # Parse the timestamp string into a datetime object
         timestamp_str = meta_data.get('timestamp')
-        consultation.timestamp = (
-            datetime.fromisoformat(timestamp_str) if timestamp_str else None
-        )
+        if timestamp_str:
+            ts = datetime.fromisoformat(timestamp_str)
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+            consultation.timestamp = ts.astimezone(timezone.utc)
+        else:
+            consultation.timestamp = None
 
         consultation.ai_diag_raw = full_patient_record.get('ai_diag')
         consultation.ai_exam_raw = full_patient_record.get('ai_exam')
