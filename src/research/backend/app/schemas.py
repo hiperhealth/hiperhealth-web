@@ -308,7 +308,9 @@ class ConsultationStatusResponse(BaseModel):
         alias='formData',
     )
     lang: str = Field(..., description="Language code, e.g. 'en' or 'es'.")
-    created_at: str = Field(..., description='Timestamp when the patient was created.')
+    created_at: str = Field(
+        ..., description='Timestamp when the patient was created.'
+    )
 
 
 class PatientSummary(BaseModel):

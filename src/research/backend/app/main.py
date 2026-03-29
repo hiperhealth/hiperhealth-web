@@ -519,7 +519,7 @@ def get_consultation_status(
         created_at=(
             patient.consultations[-1].timestamp.isoformat()
             if patient.consultations and patient.consultations[-1].timestamp
-            else ""
+            else ''
         ),
     )
 
@@ -817,9 +817,10 @@ def get_diagnosis_suggestions(
             record['patient'], language=lang, session_id=patient_id
         )
     except Exception as e:
-        logger.error(f"Diagnosis suggestion service error: {e}")
+        logger.error(f'Diagnosis suggestion service error: {e}')
         raise HTTPException(
-            status_code=503, detail="Diagnosis suggestion service is temporarily unavailable"
+            status_code=503,
+            detail='Diagnosis suggestion service is temporarily unavailable',
         )
 
     consultation = patient.consultations[-1]
@@ -887,10 +888,10 @@ def get_exam_suggestions(
             selected_diagnoses, language=lang, session_id=patient_id
         )
     except Exception as e:
-        logger.error(f"Exam suggestion service error: {e}")
+        logger.error(f'Exam suggestion service error: {e}')
         raise HTTPException(
             status_code=503,
-            detail="Exam suggestion service is temporarily unavailable",
+            detail='Exam suggestion service is temporarily unavailable',
         )
 
     consultation = patient.consultations[-1]
@@ -933,9 +934,9 @@ def submit_exams_selection(
     try:
         deidentified_record = deidentify_patient_record(record, deidentifier)
     except Exception as e:
-        logger.error(f"Deidentifier service failed: {e}")
+        logger.error(f'Deidentifier service failed: {e}')
         raise HTTPException(
-            status_code=503, detail=f"Deidentifier service failed: {e}"
+            status_code=503, detail=f'Deidentifier service failed: {e}'
         )
     repo.update_consultation(patient_id, deidentified_record)
 
