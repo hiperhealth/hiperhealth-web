@@ -43,12 +43,7 @@ export function ConsultationProvider({ children }) {
       patientId: state.patientId,
       language: state.language,
       currentStep: state.currentStep,
-      formData:{
-       demographics: state.formData.demographics,
-       lifestyle: state.formData.lifestyle,
-       symptoms: state.formData.symptoms,
-       mental: state.formData.mental
-      },
+      formData: state.formData,
     };
     localStorage.setItem(key,JSON.stringify(stateToSave));
     localStorage.setItem('consultationState_temp',JSON.stringify(stateToSave));
@@ -65,6 +60,7 @@ export function ConsultationProvider({ children }) {
 
 
 //Custom Hook
+// eslint-disable-next-line react-refresh/only-export-components
 export function useConsultation() {
   const context = useContext(ConsultationContext);
   if (!context) {
@@ -76,5 +72,6 @@ export function useConsultation() {
   return context;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export { consultationActions };
 export default ConsultationContext;

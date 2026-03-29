@@ -8,18 +8,14 @@ import {
   ProgressBar,
   Alert,
   Spinner,
-  Row,
   Col,
-  Badge,
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useConsultation, consultationActions } from '../../context/ConsultationContext';
 import consultationAPI from '../../services/api';
 
 export default function Wearable() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const { state, dispatch } = useConsultation();
   const fileInputRef = useRef(null);
   const {
@@ -27,19 +23,20 @@ export default function Wearable() {
     formState: { isSubmitting },
   } = useForm();
 
-  useEffect(()=>{
-    if(!state.formData.wearableData){
-      dispatch(consultationActions.updateWearableData({
-        file:null,
-        skipped:false,
-      }))
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[]);
   const [apiError, setApiError] = useState(null);
   const [selectedFile, setSelectedFile] = useState(
     state.formData.wearableData?.file || null
   );
+
+  useEffect(() => {
+    if (!state.formData.wearableData) {
+      dispatch(consultationActions.updateWearableData({
+        file: null,
+        skipped: false,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const acceptedFormats = [
     'text/csv',

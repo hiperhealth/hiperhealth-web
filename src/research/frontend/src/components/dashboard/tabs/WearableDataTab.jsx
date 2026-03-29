@@ -11,9 +11,15 @@ function stringifySafe(value) {
 }
 
 export default function WearableDataTab({ data }) {
-    if (!data) return <p className="text-muted">No data available</p>;
+    const wearableData = data?.data;
+    const skipped = data?.skipped;
 
-    const { data: wearableData, skipped } = data;
+    const prettyWearable = React.useMemo(
+        () => stringifySafe(wearableData),
+        [wearableData]
+    );
+
+    if (!data) return <p className="text-muted">No data available</p>;
 
     if (skipped) {
         return (
@@ -33,11 +39,6 @@ export default function WearableDataTab({ data }) {
     if (isEmpty) {
         return <p className="text-muted">No wearable data available</p>;
     }
-
-    const prettyWearable = React.useMemo(
-        () => stringifySafe(wearableData),
-        [wearableData]
-    );
 
     return (
         <div>

@@ -10,13 +10,11 @@ import {
   Col,
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { useConsultation, consultationActions } from '../../context/ConsultationContext';
 
 
 export default function Confirmation() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
   const { state, dispatch } = useConsultation();
 
   useEffect(() => {
@@ -27,7 +25,7 @@ export default function Confirmation() {
   }, [state.isComplete, state.patientId, navigate]);
 
   const handleViewDashboard = () => {
-    navigate('/dashboard');
+    navigate('/');
   };
 
   const handleCreateNewConsultation = async () => {
@@ -67,8 +65,8 @@ export default function Confirmation() {
     summary += `=== DEMOGRAPHICS ===\n`;
     summary += `Age: ${data.demographics.age} years\n`;
     summary += `Gender: ${data.demographics.gender}\n`;
-    summary += `Weight: ${data.demographics.weight} kg\n`;
-    summary += `Height: ${data.demographics.height} cm\n\n`;
+    summary += `Weight: ${data.demographics.weight_kg} kg\n`;
+    summary += `Height: ${data.demographics.height_cm} cm\n\n`;
 
     summary += `=== LIFESTYLE ===\n`;
     summary += `Diet: ${data.lifestyle.diet}\n`;
@@ -87,7 +85,7 @@ export default function Confirmation() {
     summary += `Skipped: ${data.medicalReports.skipped}\n\n`;
 
     summary += `=== WEARABLE DATA ===\n`;
-    summary += `File Uploaded: ${data.wearableData.file ? 'Yes' : 'No'}\n`;
+    summary += `File Uploaded: ${data.wearableData.file || (data.wearableData.data && data.wearableData.data.length > 0) ? 'Yes' : 'No'}\n`;
     summary += `Skipped: ${data.wearableData.skipped}\n\n`;
 
     summary += `=== SELECTED DIAGNOSES ===\n`;
@@ -96,10 +94,10 @@ export default function Confirmation() {
       const evaluations = data.diagnosis.evaluations[name];
       const score = evaluations
         ? Math.round(
-            (evaluations.accuracy +
-              evaluations.relevance +
-              evaluations.usefulness +
-              evaluations.coherence) /
+            ((evaluations?.accuracy || 0) +
+              (evaluations?.relevance || 0) +
+              (evaluations?.usefulness || 0) +
+              (evaluations?.coherence || 0)) /
               4
           )
         : 0;
@@ -113,11 +111,11 @@ export default function Confirmation() {
       const evaluations = data.exams.evaluations[name];
       const score = evaluations
         ? Math.round(
-            (evaluations.accuracy +
-              evaluations.relevance +
-              evaluations.usefulness +
-              evaluations.coherence +
-              evaluations.safety) /
+            ((evaluations?.accuracy || 0) +
+              (evaluations?.relevance || 0) +
+              (evaluations?.usefulness || 0) +
+              (evaluations?.coherence || 0) +
+              (evaluations?.safety || 0)) /
               5
           )
         : 0;

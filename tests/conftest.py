@@ -15,6 +15,15 @@ import pytest
 BACKEND_DIR = Path(__file__).parents[1] / 'src' / 'research' / 'backend'
 sys.path.insert(0, str(BACKEND_DIR))
 
+# Mock deidentifier to avoid Pydantic v1 / Python 3.14 incompatibility
+# in dependencies
+from unittest.mock import MagicMock
+
+mock_deid = MagicMock()
+sys.modules['hiperhealth.privacy.deidentifier'] = mock_deid
+sys.modules['presidio_analyzer'] = MagicMock()
+sys.modules['presidio_anonymizer'] = MagicMock()
+
 from app.main import app
 from app.models.repositories import ResearchRepository
 from app.models.ui import Base

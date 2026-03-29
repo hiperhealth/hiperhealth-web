@@ -308,6 +308,9 @@ class ConsultationStatusResponse(BaseModel):
         alias='formData',
     )
     lang: str = Field(..., description="Language code, e.g. 'en' or 'es'.")
+    created_at: str = Field(
+        ..., description='Timestamp when the patient was created.'
+    )
 
 
 class PatientSummary(BaseModel):
@@ -325,6 +328,7 @@ class PatientSummary(BaseModel):
     is_complete: bool = Field(
         ..., description='Indicates if the consultation workflow is complete.'
     )
+    lang: str = Field(..., description="Language code, e.g. 'en' or 'es'.")
 
 
 class DeleteResponse(BaseModel):
