@@ -306,7 +306,7 @@ export function consultationReducer(state, action) {
 
     case 'START_NEW_PATIENT':
       // Clear old temp data
-      localStorage.removeItem('consultationState_temp');
+      // Deliberately not wiping 'consultationState_temp' globally to prevent draft loss
 
       return {
         ...initialState, // Reset everything

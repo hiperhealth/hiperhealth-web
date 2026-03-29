@@ -322,6 +322,7 @@ def patient_to_ui_data(patient: Patient) -> Dict[str, Any]:
     )
 
     wearable_data = {
+        'file': {'name': 'wearable_data.csv', 'type': 'text/csv'} if wd else None,
         'data': wd or [],
         'skipped': _is_explicitly_skipped_list(wd),
     }
@@ -446,6 +447,7 @@ def get_all_patients(
                 else None,
                 current_step=next_step,
                 is_complete=next_step == 'confirmation',
+                lang=p.consultations[-1].lang if p.consultations and hasattr(p.consultations[-1], 'lang') else 'en',
             )
         )
     return patients_data
@@ -508,6 +510,7 @@ def get_consultation_status(
         patient_dict=record,
         formData=patient_to_ui_data(patient),
         lang=record.get('meta', {}).get('lang', 'en'),
+        created_at=patient.consultations[-1].timestamp.isoformat() if patient.consultations and patient.consultations[-1].timestamp else "",
     )
 
 
@@ -863,7 +866,13 @@ def get_exam_suggestions(
     lang = record['meta']['lang']
     selected_diagnoses = record.get('selected_diagnoses', [])
 
-    ai = diag.exams(selected_diagnoses, language=lang, session_id=patient_id)
+    try:
+        ai = diag.exams(selected_diagnoses, language=lang, session_id=patient_id)
+    except Exception as e:
+        logger.error(f"Exam suggestion service error: {e}")
+        raise HTTPException(
+            status_code=503, detail="Exam suggestion service is temporarily unavailable"
+        )
 
     consultation = patient.consultations[-1]
     consultation.ai_exam_raw = ai.model_dump()
@@ -902,7 +911,11 @@ def submit_exams_selection(
     record['evaluations']['ai_exam'] = req.evaluations
     record['meta']['timestamp'] = datetime.utcnow().isoformat()
 
-    deidentified_record = deidentify_patient_record(record, deidentifier)
+    try:
+        deidentified_record = deidentify_patient_record(record, deidentifier)
+    except Exception as e:
+        logger.error(f"Deidentifier service failed: {e}")
+        raise HTTPException(status_code=503, detail=f"Deidentifier service failed: {e}")
     repo.update_consultation(patient_id, deidentified_record)
 
     return ExamSubmitResponse(
