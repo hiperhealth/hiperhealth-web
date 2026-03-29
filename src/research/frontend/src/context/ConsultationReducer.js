@@ -151,15 +151,15 @@ export function consultationReducer(state, action) {
         error: null,
         formData: {
           ...state.formData,
-          diagnosis: {
+          diagnosis: state.formData.diagnosis || {
             suggestions: [],
             selected: [],
             evaluations: {},
           },
-        exams: {
-          suggestions: [],
-          selected: [],
-          evaluations: {},
+          exams: state.formData.exams || {
+            suggestions: [],
+            selected: [],
+            evaluations: {},
           },
         },
       };

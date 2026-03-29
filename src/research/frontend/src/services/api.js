@@ -205,15 +205,20 @@ export const consultationAPI={
      * Upload medical resports (multiple files).
      * POST /api/consultations/{patient_id}medical-reports
      */
-    async uploadMedicalReports(patientId,files){
-        const formData=new FormData();
-        files.forEach((file)=>formData.append('files',file))
+    async uploadMedicalReports(patientId, files) {
+        let formData;
+        if (files instanceof FormData) {
+            formData = files;
+        } else {
+            formData = new FormData();
+            files.forEach((file) => formData.append('files', file));
+        }
 
-        const response =await fetch(
+        const response = await fetch(
             api(`/api/consultations/${patientId}/medical-reports/upload`),
             {
-                method:'POST',
-                body: formData
+                method: 'POST',
+                body: formData,
             }
         );
 
@@ -268,17 +273,22 @@ export const consultationAPI={
      * Upload wearable data
      * POST /api/consultations/{patient_id}/wearable-data/upload
      */
-    async uploadWearableData(patientId,file){
-        const formData=new FormData();
-        formData.append('file',file);
+    async uploadWearableData(patientId, file) {
+        let formData;
+        if (file instanceof FormData) {
+            formData = file;
+        } else {
+            formData = new FormData();
+            formData.append('file', file);
+        }
         // TODO: add multiple file upload
-        const response= await fetch(
+        const response = await fetch(
             api(`/api/consultations/${patientId}/wearable-data/upload`),
             {
-                method:'POST',
-                body:formData
+                method: 'POST',
+                body: formData,
             }
-        )
+        );
 
         if(!response.ok){
             throw new Error(`Upload Wearable data failed: ${response.status}`)

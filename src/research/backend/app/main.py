@@ -266,8 +266,8 @@ def patient_to_ui_data(patient: Patient) -> Dict[str, Any]:
     demographics = {
         'age': patient.age,
         'gender': patient.gender,
-        'weight': consultation.weight_kg if consultation else None,
-        'height': consultation.height_cm if consultation else None,
+        'weight_kg': consultation.weight_kg if consultation else None,
+        'height_cm': consultation.height_cm if consultation else None,
     }
 
     # 2. Lifestyle
@@ -322,7 +322,9 @@ def patient_to_ui_data(patient: Patient) -> Dict[str, Any]:
     )
 
     wearable_data = {
-        'file': {'name': 'wearable_data.csv', 'type': 'text/csv'} if wd else None,
+        'file': (
+            {'name': 'wearable_data.csv', 'type': 'text/csv'} if wd else None
+        ),
         'data': wd or [],
         'skipped': _is_explicitly_skipped_list(wd),
     }
@@ -447,7 +449,11 @@ def get_all_patients(
                 else None,
                 current_step=next_step,
                 is_complete=next_step == 'confirmation',
-                lang=p.consultations[-1].lang if p.consultations and hasattr(p.consultations[-1], 'lang') else 'en',
+                lang=(
+                    p.consultations[-1].lang
+                    if p.consultations and hasattr(p.consultations[-1], 'lang')
+                    else 'en'
+                ),
             )
         )
     return patients_data
@@ -510,7 +516,11 @@ def get_consultation_status(
         patient_dict=record,
         formData=patient_to_ui_data(patient),
         lang=record.get('meta', {}).get('lang', 'en'),
-        created_at=patient.consultations[-1].timestamp.isoformat() if patient.consultations and patient.consultations[-1].timestamp else "",
+        created_at=(
+            patient.consultations[-1].timestamp.isoformat()
+            if patient.consultations and patient.consultations[-1].timestamp
+            else ""
+        ),
     )
 
 
@@ -802,9 +812,15 @@ def get_diagnosis_suggestions(
     lang = record['meta']['lang']
 
     # Call AI diagnostic engine
-    ai = diag.differential(
-        record['patient'], language=lang, session_id=patient_id
-    )
+    try:
+        ai = diag.differential(
+            record['patient'], language=lang, session_id=patient_id
+        )
+    except Exception as e:
+        logger.error(f"Diagnosis suggestion service error: {e}")
+        raise HTTPException(
+            status_code=503, detail="Diagnosis suggestion service is temporarily unavailable"
+        )
 
     consultation = patient.consultations[-1]
     consultation.ai_diag_raw = ai.model_dump()
@@ -867,11 +883,14 @@ def get_exam_suggestions(
     selected_diagnoses = record.get('selected_diagnoses', [])
 
     try:
-        ai = diag.exams(selected_diagnoses, language=lang, session_id=patient_id)
+        ai = diag.exams(
+            selected_diagnoses, language=lang, session_id=patient_id
+        )
     except Exception as e:
         logger.error(f"Exam suggestion service error: {e}")
         raise HTTPException(
-            status_code=503, detail="Exam suggestion service is temporarily unavailable"
+            status_code=503,
+            detail="Exam suggestion service is temporarily unavailable",
         )
 
     consultation = patient.consultations[-1]
@@ -915,7 +934,9 @@ def submit_exams_selection(
         deidentified_record = deidentify_patient_record(record, deidentifier)
     except Exception as e:
         logger.error(f"Deidentifier service failed: {e}")
-        raise HTTPException(status_code=503, detail=f"Deidentifier service failed: {e}")
+        raise HTTPException(
+            status_code=503, detail=f"Deidentifier service failed: {e}"
+        )
     repo.update_consultation(patient_id, deidentified_record)
 
     return ExamSubmitResponse(

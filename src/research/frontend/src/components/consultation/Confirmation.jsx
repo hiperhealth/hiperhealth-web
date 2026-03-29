@@ -65,8 +65,8 @@ export default function Confirmation() {
     summary += `=== DEMOGRAPHICS ===\n`;
     summary += `Age: ${data.demographics.age} years\n`;
     summary += `Gender: ${data.demographics.gender}\n`;
-    summary += `Weight: ${data.demographics.weight} kg\n`;
-    summary += `Height: ${data.demographics.height} cm\n\n`;
+    summary += `Weight: ${data.demographics.weight_kg} kg\n`;
+    summary += `Height: ${data.demographics.height_cm} cm\n\n`;
 
     summary += `=== LIFESTYLE ===\n`;
     summary += `Diet: ${data.lifestyle.diet}\n`;

@@ -23,19 +23,20 @@ export default function Wearable() {
     formState: { isSubmitting },
   } = useForm();
 
-  useEffect(()=>{
-    if(!state.formData.wearableData){
-      dispatch(consultationActions.updateWearableData({
-        file:null,
-        skipped:false,
-      }))
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[]);
   const [apiError, setApiError] = useState(null);
   const [selectedFile, setSelectedFile] = useState(
     state.formData.wearableData?.file || null
   );
+
+  useEffect(() => {
+    if (!state.formData.wearableData) {
+      dispatch(consultationActions.updateWearableData({
+        file: null,
+        skipped: false,
+      }));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const acceptedFormats = [
     'text/csv',
