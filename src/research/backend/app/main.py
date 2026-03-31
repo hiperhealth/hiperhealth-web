@@ -28,7 +28,9 @@ from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
 
 from dotenv import load_dotenv
+from fastapi import FastAPI
 
+app = FastAPI()
 # Load environment variables
 env_path = Path(__file__).resolve().parents[3] / '.envs' / '.env'
 load_dotenv(env_path)
@@ -108,7 +110,21 @@ def get_repository(
 ) -> ResearchRepository:
     """Get a repository instance with a database session."""
     return ResearchRepository(db_session=db)
+@app.get("/api/patients")
+def get_patients():
+    return [
+        {"id": 1, "name": "John Doe"},
+        {"id": 2, "name": "Jane Smith"},
+    ]
 
+
+# Resume step API
+@app.get("/api/consultations/{patient_id}/status")
+def get_status(patient_id: int):
+    return {
+        "patient_id": patient_id,
+        "current_step": "symptoms"  # simulate progress
+    }
 
 # --- App Initialization ---
 _STATIC = StaticFiles(directory=APP_DIR / 'static')
