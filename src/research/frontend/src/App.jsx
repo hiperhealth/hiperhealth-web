@@ -13,7 +13,7 @@ import Wearable from "./components/consultation/Wearable";
 import Diagnosis from "./components/consultation/Diagnosis";
 import Exam from "./components/consultation/Exam";
 import Confirmation from "./components/consultation/Confirmation";
-
+import Navbar from "./components/Navbar";
 
 export default function App() {
   return (
@@ -34,6 +34,9 @@ export default function App() {
           <Route path="*" element={<Dashboard />} />
         </Routes>
       </Router>
-
+<>
+  <Navbar />
+  {/* existing routes */}
+</>
   );
 }
