@@ -18,6 +18,9 @@ import Navbar from "./components/Navbar";
 export default function App() {
   return (
       <Router>
+         {/* Navbar outside Routes to show on every page */}
+      <Navbar />
+
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/patients/:id" element={<PatientView />} />
@@ -34,11 +37,6 @@ export default function App() {
           <Route path="*" element={<Dashboard />} />
         </Routes>
       </Router>
-return (
-  <div>
-    <Navbar />
-    {/* existing routes */}
-  </div>
-);
+
   );
 }
