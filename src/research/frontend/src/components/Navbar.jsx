@@ -54,8 +54,8 @@ const Navbar = () => {
       <select value={selected} onChange={handleChange}>
         <option value="">Select Patient</option>
         {patients.map((p) => (
-          <option key={p.id} value={p.id}>
-            {p.name || `Patient ${p.id}`}
+          <option key={p.patient_id} value={p.patient_id}>
+            {p.name || `Patient ${p.patient_id}`}
           </option>
         ))}
       </select>
