@@ -34,9 +34,11 @@ export default function App() {
           <Route path="*" element={<Dashboard />} />
         </Routes>
       </Router>
-<>
-  <Navbar />
-  {/* existing routes */}
-</>
+return (
+  <div>
+    <Navbar />
+    {/* existing routes */}
+  </div>
+);
   );
 }
