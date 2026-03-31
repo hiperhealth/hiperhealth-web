@@ -70,7 +70,7 @@ from app.schemas import (
     WearableDataSkipResponse,
     WearableDataUploadResponse,
 )
-from fastapi import Depends,FastAPI(),  File, HTTPException, UploadFile
+from fastapi import Depends,FASTAPI,  File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from hiperhealth.agents.diagnostics import core as diag
