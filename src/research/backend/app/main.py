@@ -21,15 +21,16 @@ derived from the patient data itself.
 import io
 import logging
 import uuid
-app=FastAPI()
+
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+
+app = FastAPI()
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
 
 from dotenv import load_dotenv
-
-
 
 # Load environment variables
 env_path = Path(__file__).resolve().parents[3] / '.envs' / '.env'
@@ -70,7 +71,6 @@ from app.schemas import (
     WearableDataSkipResponse,
     WearableDataUploadResponse,
 )
-from fastapi import Depends,FASTAPI,  File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from hiperhealth.agents.diagnostics import core as diag
