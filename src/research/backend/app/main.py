@@ -20,12 +20,13 @@ derived from the patient data itself.
 # ruff: noqa: E402
 import io
 import logging
+import os
 import uuid
 
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Dict, Generator, List, Optional
+from typing import Any, Awaitable, Callable, Dict, Generator, List, Optional
 
 from dotenv import load_dotenv
 
@@ -68,8 +69,9 @@ from app.schemas import (
     WearableDataSkipResponse,
     WearableDataUploadResponse,
 )
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from hiperhealth.agents.diagnostics import core as diag
 from hiperhealth.agents.extraction.medical_reports import (
@@ -85,6 +87,10 @@ from sqlalchemy.orm import Session
 logger = logging.getLogger(__name__)
 
 APP_DIR = Path(__file__).parent
+
+MAX_REQUEST_BYTES: int = int(
+    os.getenv('MAX_REQUEST_BYTES', '52428800')
+)  # 50 MB
 
 
 # --- Database Dependency Setup ---
@@ -123,6 +129,32 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+
+@app.middleware('http')
+async def limit_request_body_size(
+    request: Request, call_next: Callable[[Request], Awaitable[Any]]
+) -> Any:
+    """Reject requests whose body exceeds MAX_REQUEST_BYTES."""
+    content_length = request.headers.get('content-length')
+    if content_length is not None:
+        try:
+            if int(content_length) > MAX_REQUEST_BYTES:
+                return JSONResponse(
+                    status_code=413,
+                    content={'detail': 'Request body too large'},
+                )
+        except ValueError:
+            pass
+
+    body = await request.body()
+    if len(body) > MAX_REQUEST_BYTES:
+        return JSONResponse(
+            status_code=413,
+            content={'detail': 'Request body too large'},
+        )
+
+    return await call_next(request)
 
 
 # --- Helper Functions ---
