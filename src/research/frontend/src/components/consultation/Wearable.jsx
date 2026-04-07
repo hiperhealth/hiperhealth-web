@@ -177,7 +177,10 @@ export default function Wearable() {
         <div className="mb-4">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <small className="text-muted fw-semibold">Step 6 of 10</small>
-            <small className="text-muted">60% Complete</small>
+            <div className="d-flex align-items-center gap-3">
+              <small className="text-muted">60% Complete</small>
+              <Button variant="outline-secondary" size="sm" onClick={() => navigate('/')} title="Back to Dashboard">🏠</Button>
+            </div>
           </div>
           <ProgressBar now={60} style={{ height: '8px' }} className="mb-3" />
         </div>
@@ -413,7 +416,7 @@ export default function Wearable() {
               <div className="d-flex justify-content-between align-items-center pt-4 border-top">
                 <Button
                   variant="outline-secondary"
-                  onClick={() => navigate(-1)}
+                  onClick={() => navigate('/medical-reports')}
                   size="lg"
                   disabled={isSubmitting}
                 >
