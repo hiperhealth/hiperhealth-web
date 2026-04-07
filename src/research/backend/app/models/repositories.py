@@ -4,7 +4,10 @@ from datetime import datetime
 from typing import Any, Dict, List
 from uuid import UUID
 
-from app.models.ui import (
+from sqlalchemy.orm import Session
+
+from ...schema.ui import ConsultationCreate, PatientCreate
+from ..models.ui import (
     Consultation,
     ConsultationDiagnosis,
     ConsultationExam,
@@ -12,8 +15,6 @@ from app.models.ui import (
     Exam,
     Patient,
 )
-from schema.ui import ConsultationCreate, PatientCreate
-from sqlalchemy.orm import Session
 
 
 class ResearchRepository:
