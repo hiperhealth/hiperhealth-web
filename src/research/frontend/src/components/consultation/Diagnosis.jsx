@@ -92,8 +92,7 @@ export default function Diagnosis() {
       
       const signal = getSignal();
       const response = await consultationAPI.getDiagnosisSuggestions(state.patientId, signal);
-      
-      // Only update state if component is still mounted and request wasn't aborted
+
       if (!isMountedRef.current || isAborted()) {
         return;
       }
@@ -123,7 +122,6 @@ export default function Diagnosis() {
         )
       );
     } catch (err) {
-      // Only show error if component is mounted and it's not an abort error
       if (isMountedRef.current && err.name !== 'AbortError') {
         console.error('Error fetching diagnosis suggestions:', err);
         setApiError(err.message || 'Failed to load diagnosis suggestions. Please try again.');
