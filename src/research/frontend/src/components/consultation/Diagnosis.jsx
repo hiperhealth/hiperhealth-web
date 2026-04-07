@@ -42,7 +42,7 @@ export default function Diagnosis() {
 
   useEffect(() => {
     isMountedRef.current = true;
-    
+
     const hasExistingData=
       state.formData.diagnosis.suggestions.length>0 ||
       state.formData.diagnosis.selected.length>0 ||
@@ -89,7 +89,7 @@ export default function Diagnosis() {
       if (!state.patientId) {
         throw new Error('Patient ID not found. Please start over.');
       }
-      
+
       const signal = getSignal();
       const response = await consultationAPI.getDiagnosisSuggestions(state.patientId, signal);
 

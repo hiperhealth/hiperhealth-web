@@ -42,7 +42,7 @@ export default function Exams() {
 
   useEffect(() => {
     isMountedRef.current = true;
-    
+
     const hasExistingData =
       state.formData.exams.suggestions.length > 0 ||
       state.formData.exams.selected.length > 0 ||
@@ -95,7 +95,7 @@ export default function Exams() {
 
       const signal = getSignal();
       const response = await consultationAPI.getExamSuggestions(state.patientId, signal);
-      
+
       // Only update state if component is still mounted and request wasn't aborted
       if (!isMountedRef.current || isAborted()) {
         return;

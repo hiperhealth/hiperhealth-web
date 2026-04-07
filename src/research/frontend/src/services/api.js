@@ -321,7 +321,7 @@ export const consultationAPI={
         if (signal) {
             options.signal = signal;
         }
-        
+
         const response= await fetch(
             api(`/api/consultations/${patientId}/diagnosis`),
             options
