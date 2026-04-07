@@ -313,10 +313,18 @@ export const consultationAPI={
     /**
      * Get diagnosis suggestions
      * GET /api/consultations/{patient_id}/diagnosis
+     * @param {string} patientId - Patient ID
+     * @param {AbortSignal} [signal] - Optional abort signal for cancellation
      */
-    async getDiagnosisSuggestions(patientId){
+    async getDiagnosisSuggestions(patientId, signal){
+        const options = {};
+        if (signal) {
+            options.signal = signal;
+        }
+        
         const response= await fetch(
-            api(`/api/consultations/${patientId}/diagnosis`)
+            api(`/api/consultations/${patientId}/diagnosis`),
+            options
         )
 
         if(!response.ok){
@@ -360,10 +368,18 @@ export const consultationAPI={
     /**
      * Get exam suggestions
      * GET /api/consultations/{patient_id}/exams
+     * @param {string} patientId - Patient ID
+     * @param {AbortSignal} [signal] - Optional abort signal for cancellation
      */
-    async getExamSuggestions(patientId){
+    async getExamSuggestions(patientId, signal){
+        const options = {};
+        if (signal) {
+            options.signal = signal;
+        }
+
         const response= await fetch(
-            api(`/api/consultations/${patientId}/exams`)
+            api(`/api/consultations/${patientId}/exams`),
+            options
         );
 
         if(!response.ok)

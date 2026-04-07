@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   Form,
@@ -15,11 +15,13 @@ import {
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useConsultation, consultationActions } from '../../context/ConsultationContext';
+import { useAbortController } from '../../hooks/useAbortController';
 import consultationAPI from '../../services/api';
 
 export default function Exams() {
   const navigate = useNavigate();
   const { state, dispatch } = useConsultation();
+  const { getSignal, abort, isAborted } = useAbortController();
 
   const {
     handleSubmit,
@@ -35,9 +37,12 @@ export default function Exams() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [evaluations, setEvaluations] = useState({});
   const [manualText, setManualText] = useState('');
+  const isMountedRef = useRef(true);
 
 
   useEffect(() => {
+    isMountedRef.current = true;
+    
     const hasExistingData =
       state.formData.exams.suggestions.length > 0 ||
       state.formData.exams.selected.length > 0 ||
@@ -48,6 +53,10 @@ export default function Exams() {
     } else {
       fetchExamSuggestions();
     }
+
+    return () => {
+      isMountedRef.current = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -84,7 +93,14 @@ export default function Exams() {
         throw new Error('Patient ID not found. Please start over.');
       }
 
-      const response = await consultationAPI.getExamSuggestions(state.patientId);
+      const signal = getSignal();
+      const response = await consultationAPI.getExamSuggestions(state.patientId, signal);
+      
+      // Only update state if component is still mounted and request wasn't aborted
+      if (!isMountedRef.current || isAborted()) {
+        return;
+      }
+
       const options = response.options || [];
       setAiSummary(response.summary || '');
 
@@ -109,10 +125,15 @@ export default function Exams() {
         )
       );
     } catch (err) {
-      console.error('Error fetching exam suggestions:', err);
-      setApiError(err.message || 'Failed to load exam suggestions. Please try again.');
+      // Only show error if component is mounted and it's not an abort error
+      if (isMountedRef.current && err.name !== 'AbortError') {
+        console.error('Error fetching exam suggestions:', err);
+        setApiError(err.message || 'Failed to load exam suggestions. Please try again.');
+      }
     } finally {
-      setIsLoadingSuggestions(false);
+      if (isMountedRef.current) {
+        setIsLoadingSuggestions(false);
+      }
     }
   };
 
@@ -298,13 +319,23 @@ export default function Exams() {
           <Card className="border-0 shadow-sm">
             <Card.Body className="p-4 p-md-5">
               {/* Header */}
-              <div className="mb-4">
-                <h1 className="h3 fw-bold text-primary mb-1">
-                  AI Exam / Test Suggestions
-                </h1>
-                <p className="text-muted mb-0 small">
-                  Select recommended exams, rate each one, and add any additional tests.
-                </p>
+              <div className="mb-4 d-flex justify-content-between align-items-start">
+                <div>
+                  <h1 className="h3 fw-bold text-primary mb-1">
+                    AI Exam / Test Suggestions
+                  </h1>
+                  <p className="text-muted mb-0 small">
+                    Select recommended exams, rate each one, and add any additional tests.
+                  </p>
+                </div>
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  onClick={abort}
+                  disabled={!isLoadingSuggestions}
+                >
+                  Cancel Request
+                </Button>
               </div>
 
               {/* AI summary */}
