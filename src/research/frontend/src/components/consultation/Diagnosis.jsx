@@ -1,4 +1,4 @@
-import { useState, useEffect} from 'react';
+import { useState, useEffect, useRef} from 'react';
 import { useForm } from 'react-hook-form';
 import {
   Form,
@@ -15,12 +15,14 @@ import {
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useConsultation, consultationActions } from '../../context/ConsultationContext';
+import { useAbortController } from '../../hooks/useAbortController';
 import consultationAPI from '../../services/api';
 
 
 export default function Diagnosis() {
   const navigate = useNavigate();
   const { state, dispatch } = useConsultation();
+  const { getSignal, isAborted } = useAbortController();
 
   const {
     handleSubmit,
@@ -36,8 +38,11 @@ export default function Diagnosis() {
   const [selectedIds, setSelectedIds] = useState([]);
   const [evaluations, setEvaluations] = useState({});
   const [manualText, setManualText] = useState('');
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
+
     const hasExistingData=
       state.formData.diagnosis.suggestions.length>0 ||
       state.formData.diagnosis.selected.length>0 ||
@@ -48,6 +53,10 @@ export default function Diagnosis() {
       }else{
         fetchDiagnosisSuggestions();
       }
+
+    return () => {
+      isMountedRef.current = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
 
@@ -80,7 +89,14 @@ export default function Diagnosis() {
       if (!state.patientId) {
         throw new Error('Patient ID not found. Please start over.');
       }
-      const response = await consultationAPI.getDiagnosisSuggestions(state.patientId);
+
+      const signal = getSignal();
+      const response = await consultationAPI.getDiagnosisSuggestions(state.patientId, signal);
+
+      if (!isMountedRef.current || isAborted()) {
+        return;
+      }
+
       const options = response.options || [];
       setAiSummary(response.summary || '');
 
@@ -106,10 +122,14 @@ export default function Diagnosis() {
         )
       );
     } catch (err) {
-      console.error('Error fetching diagnosis suggestions:', err);
-      setApiError(err.message || 'Failed to load diagnosis suggestions. Please try again.');
+      if (isMountedRef.current && err.name !== 'AbortError') {
+        console.error('Error fetching diagnosis suggestions:', err);
+        setApiError(err.message || 'Failed to load diagnosis suggestions. Please try again.');
+      }
     } finally {
-      setIsLoadingSuggestions(false);
+      if (isMountedRef.current) {
+        setIsLoadingSuggestions(false);
+      }
     }
   };
 

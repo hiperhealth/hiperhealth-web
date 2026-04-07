@@ -241,7 +241,7 @@ def patient_to_dict(patient: Patient) -> Dict[str, Any]:
         ]
         for field in consultation_fields:
             if hasattr(consultation, field):
-                patient_dict['patient'][field] = getattr(consultation, field)  # type: ignore[call-overload]
+                patient_dict['patient'][field] = getattr(consultation, field)
 
     return patient_dict
 
