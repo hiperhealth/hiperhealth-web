@@ -1,4 +1,4 @@
-![LOGO](/images/logo.png)
+![LOGO](images/logo.png)
 
 # hiperhealth-web
 

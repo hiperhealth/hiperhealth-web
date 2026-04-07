@@ -56,4 +56,4 @@ makim docs.build
 5. Wait for review and address any feedback
 
 For more details, see the
-[Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md).
+[Pull Request Template](https://github.com/hiperhealth/hiperhealth-web/blob/main/.github/PULL_REQUEST_TEMPLATE.md).
