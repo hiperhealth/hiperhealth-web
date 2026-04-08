@@ -22,7 +22,7 @@ import io
 import logging
 import uuid
 
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
@@ -76,10 +76,26 @@ from hiperhealth.agents.extraction.medical_reports import (
     MedicalReportFileExtractor,
 )
 from hiperhealth.agents.extraction.wearable import WearableDataFileExtractor
-from hiperhealth.privacy.deidentifier import (
-    Deidentifier,
-    deidentify_patient_record,
-)
+
+# Deidentifier imports can pull large NLP libraries (presidio/spaCy) which
+# may fail at module import time in some environments. Import lazily and
+# provide a fallback so the app can start for lightweight operations
+# (such as capturing before/after screenshots).
+try:
+    from hiperhealth.privacy.deidentifier import (
+        Deidentifier,
+        deidentify_patient_record,
+    )
+except Exception:  # pragma: no cover - environment-dependent
+    Deidentifier = None  # type: ignore[assignment,misc]
+
+    def deidentify_patient_record(  # type: ignore[misc]
+        record: Any, deidentifier: Any
+    ) -> Any:
+        """Raise error when Deidentifier is unavailable."""
+        raise RuntimeError('Deidentifier dependency not available')
+
+
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
@@ -416,15 +432,21 @@ def create_new_patient(
 ) -> CreatePatientResponse:
     """Create a new patient and start a new consultation."""
     patient_uuid = str(uuid.uuid4())
+    # Persist a timestamp so repository can save the consultation timestamp
+    created_at = datetime.now(timezone.utc).isoformat()
     new_patient_record = {
-        'meta': {'uuid': patient_uuid, 'lang': req.lang},
+        'meta': {
+            'uuid': patient_uuid,
+            'lang': req.lang,
+            'timestamp': created_at,
+        },
         'patient': {},
     }
     repo.create_patient_and_consultation(new_patient_record)
     return CreatePatientResponse(
         patient_id=patient_uuid,
         lang=req.lang,
-        created_at=datetime.utcnow().isoformat(),
+        created_at=created_at,
     )
 
 
