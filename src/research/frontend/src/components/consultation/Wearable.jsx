@@ -138,10 +138,6 @@ export default function Wearable() {
         return;
       }
 
-      // Create FormData for multipart upload
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-
       // Update local state
       dispatch(
         consultationActions.updateWearableData({
@@ -155,7 +151,7 @@ export default function Wearable() {
       );
 
       // Call backend API to upload
-      await consultationAPI.uploadWearableData(state.patientId, formData);
+      await consultationAPI.uploadWearableData(state.patientId, selectedFile);
 
       // Update current step in context
       dispatch(consultationActions.setCurrentStep('diagnosis'));
