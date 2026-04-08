@@ -151,15 +151,15 @@ export function consultationReducer(state, action) {
         error: null,
         formData: {
           ...state.formData,
-          diagnosis: {
+          diagnosis: state.formData.diagnosis || {
             suggestions: [],
             selected: [],
             evaluations: {},
           },
-        exams: {
-          suggestions: [],
-          selected: [],
-          evaluations: {},
+          exams: state.formData.exams || {
+            suggestions: [],
+            selected: [],
+            evaluations: {},
           },
         },
       };
@@ -306,7 +306,7 @@ export function consultationReducer(state, action) {
 
     case 'START_NEW_PATIENT':
       // Clear old temp data
-      localStorage.removeItem('consultationState_temp');
+      // Deliberately not wiping 'consultationState_temp' globally to prevent draft loss
 
       return {
         ...initialState, // Reset everything
