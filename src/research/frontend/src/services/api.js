@@ -3,11 +3,17 @@
  * Maps to backend at http://localhost:8000/api/*
  */
 
-export const API_BASE=
-    import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+export const API_BASE =
+  import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 
-export function api(path){
-    return `${API_BASE}${path}`
+export function api(path) {
+  return `${API_BASE}${path}`;
+}
+
+/** Return Authorization header object if a JWT token is stored, else empty. */
+export function getAuthHeaders() {
+  const token = localStorage.getItem("auth_token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 export const consultationAPI={
