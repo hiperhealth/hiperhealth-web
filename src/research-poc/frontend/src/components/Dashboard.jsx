@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Button,
@@ -15,7 +15,6 @@ import ReactPaginate from "react-paginate";
 export default function Dashboard() {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { useEffect } = React;
   const [patients, setPatients] = useState([]);
   const [stats, setStats] = useState({ total_patients: 0, active_records: 0, this_month: 0, recent_patients: [] });
   // fetch patients and dashboard stats from backend
@@ -61,15 +60,45 @@ export default function Dashboard() {
   const itemsPerPage = 3;
   const [itemOffset, setItemOffset] = useState(0);
 
+  const sortedPatients = useMemo(() => {
+    const getCreatedTimestamp = (patient) => {
+      const createdValue = patient?.createdAt ?? patient?.created_at;
+      if (!createdValue) return null;
+      const timestamp = new Date(createdValue).getTime();
+      return Number.isNaN(timestamp) ? null : timestamp;
+    };
+
+    return [...patients].sort((a, b) => {
+      const aTimestamp = getCreatedTimestamp(a);
+      const bTimestamp = getCreatedTimestamp(b);
+
+      if (aTimestamp === null && bTimestamp === null) return 0;
+      if (aTimestamp === null) return 1;
+      if (bTimestamp === null) return -1;
+
+      return bTimestamp - aTimestamp;
+    });
+  }, [patients]);
+
+  useEffect(() => {
+    if (itemOffset >= sortedPatients.length && sortedPatients.length > 0) {
+      setItemOffset(0);
+    }
+  }, [itemOffset, sortedPatients.length]);
+
   const endOffset = itemOffset + itemsPerPage;
-  const currentItems = patients.slice(itemOffset, endOffset);
-  const pageCount = Math.ceil(patients.length / itemsPerPage);
+  const currentItems = sortedPatients.slice(itemOffset, endOffset);
+  const pageCount = Math.ceil(sortedPatients.length / itemsPerPage);
 
   const handlePageClick = (event) => {
-    const newOffset = (event.selected * itemsPerPage) % patients.length;
+    if (!sortedPatients.length) {
+      setItemOffset(0);
+      return;
+    }
+    const newOffset = (event.selected * itemsPerPage) % sortedPatients.length;
     setItemOffset(newOffset);
   };
-  const hasPatients = patients && patients.length > 0;
+  const hasPatients = sortedPatients && sortedPatients.length > 0;
 
   return (
     <div className="bg-light min-vh-100 py-3">
