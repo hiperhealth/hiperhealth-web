@@ -12,12 +12,16 @@ import MedicalReport from "./components/consultation/MedicalReport";
 import Wearable from "./components/consultation/Wearable";
 import Diagnosis from "./components/consultation/Diagnosis";
 import Exam from "./components/consultation/Exam";
+import { ConsultationProvider } from "./context/ConsultationContext";
 import Confirmation from "./components/consultation/Confirmation";
+import Navbar from "./components/dashboard/Navbar";
 
 
 export default function App() {
   return (
+    <ConsultationProvider>
       <Router>
+        <Navbar />
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/patients/:id" element={<PatientView />} />
@@ -34,6 +38,6 @@ export default function App() {
           <Route path="*" element={<Dashboard />} />
         </Routes>
       </Router>
-
+    </ConsultationProvider>
   );
 }
