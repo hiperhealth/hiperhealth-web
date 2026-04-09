@@ -133,7 +133,7 @@ groups:
       setup:
         help: Creates and migrates the database to the latest version
         run: |
-          mkdir -p src/research/backend/data
+          python -c "import os; os.makedirs('src/research/backend/data', exist_ok=True)"
           alembic upgrade head
       revision:
         help: Autogenerates a new database revision script
