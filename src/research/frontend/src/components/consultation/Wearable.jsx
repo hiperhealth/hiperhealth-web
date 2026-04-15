@@ -44,9 +44,13 @@ export default function Wearable() {
   const acceptedFormats = [
     'text/csv',
     'application/json',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/pdf',
+    'application/zip',
+    'application/x-zip-compressed',
   ];
 
-  const acceptedExtensions = '.csv, .json';
+  const acceptedExtensions = '.csv, .json, .xlsx, .pdf, .zip';
   const maxFileSize = 50 * 1024 * 1024; // 50MB for data exports
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
@@ -59,6 +63,10 @@ export default function Wearable() {
   const getFileIcon = (type) => {
     if (type.includes('csv')) return '📊';
     if (type.includes('json')) return '📋';
+    if (type.includes('spreadsheet') || type.includes('xlsx')) return '📊';
+    if (type.includes('pdf')) return '📑';
+    if (type.includes('zip')) return '📦';
+    return '📄';
   };
 
   const handleFileSelect = (event) => {
@@ -72,7 +80,7 @@ export default function Wearable() {
     // Check format
     if (!acceptedFormats.includes(file.type)) {
       setApiError(
-        `Invalid file format: ${file.name}. Accepted: CSV, JSON`
+        `Invalid file format: ${file.name}. Accepted: CSV, JSON, XLSX, PDF, ZIP`
       );
       return;
     }
@@ -382,6 +390,9 @@ export default function Wearable() {
                       <ul className="text-muted small mb-0 ps-3">
                         <li>CSV (Comma Separated)</li>
                         <li>JSON (Data Export)</li>
+                        <li>XLSX (Excel Spreadsheet)</li>
+                        <li>PDF (Health Reports)</li>
+                        <li>ZIP (Bundled Export)</li>
                       </ul>
                     </Col>
                     <Col md={6}>

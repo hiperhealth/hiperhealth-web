@@ -68,6 +68,7 @@ from app.schemas import (
     WearableDataSkipResponse,
     WearableDataUploadResponse,
 )
+from app.wearable_formats import process_pdf, process_xlsx, process_zip
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -720,6 +721,18 @@ def get_medical_reports(
     )
 
 
+# File extension to MIME type mapping for wearable uploads.
+_WEARABLE_MIME_MAP: Dict[str, str] = {
+    '.csv': 'text/csv',
+    '.json': 'application/json',
+    '.xlsx': (
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ),
+    '.pdf': 'application/pdf',
+    '.zip': 'application/zip',
+}
+
+
 # Wearable data Upload
 @app.post(
     '/api/consultations/{patient_id}/wearable-data/upload',
@@ -729,8 +742,13 @@ async def upload_wearable_data(
     patient_id: str,
     file: UploadFile = File(...),
     repo: ResearchRepository = Depends(get_repository),
-) -> StepResponse:
-    """Upload and Process wearable data."""
+) -> WearableDataUploadResponse:
+    """Upload and process wearable data.
+
+    Supports CSV, JSON, XLSX, PDF and ZIP formats.
+    XLSX, PDF and ZIP files are pre-processed into the standard
+    list-of-dicts structure before storage.
+    """
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
         raise HTTPException(status_code=404, detail='Patient not found')
@@ -740,12 +758,42 @@ async def upload_wearable_data(
     if not file or file.size == 0:
         raise HTTPException(status_code=400, detail='No file provided')
 
-    extractor = WearableDataFileExtractor()
+    # Determine extension from filename.
+    filename = file.filename or ''
+    ext = ''
+    dot_idx = filename.rfind('.')
+    if dot_idx != -1:
+        ext = filename[dot_idx:].lower()
+
+    if ext not in _WEARABLE_MIME_MAP:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f'Unsupported file format: {ext}. '
+                f'Accepted: CSV, JSON, XLSX, PDF, ZIP.'
+            ),
+        )
+
     try:
         file_content = await file.read()
-        wearable_data = extractor.extract_wearable_data(
-            io.BytesIO(file_content)
-        )
+
+        if ext in ('.csv', '.json'):
+            # Use the existing library extractor for CSV/JSON.
+            extractor = WearableDataFileExtractor()
+            wearable_data = extractor.extract_wearable_data(
+                io.BytesIO(file_content)
+            )
+        elif ext == '.xlsx':
+            wearable_data = process_xlsx(file_content)
+        elif ext == '.pdf':
+            wearable_data = process_pdf(file_content)
+        elif ext == '.zip':
+            wearable_data = process_zip(file_content)
+        else:
+            raise HTTPException(
+                status_code=400, detail='Unsupported file format.'
+            )
+
         consultation.wearable_data = wearable_data
         repo.db.commit()
 
@@ -753,9 +801,12 @@ async def upload_wearable_data(
         return WearableDataUploadResponse(
             success=True, file_name=file.filename, next_step=next_step
         )
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
-            status_code=422, detail=f'Failed to process wearable data:{e}'
+            status_code=422,
+            detail=f'Failed to process wearable data: {e}',
         )
 
 
