@@ -54,6 +54,11 @@ class Consultation(Base):
     ai_exam_raw = Column(JSON)
 
     patient = relationship(Patient, back_populates='consultations')
+    wearable_files = relationship(
+        'WearableFile',
+        back_populates='consultation',
+        cascade='all, delete-orphan',
+    )
     selected_diagnoses = relationship(
         'ConsultationDiagnosis', back_populates='consultation'
     )
@@ -121,3 +126,22 @@ class ConsultationExam(Base):
 
     consultation = relationship(Consultation, back_populates='selected_exams')
     exam = relationship(Exam)
+
+
+class WearableFile(Base):
+    """Tracks individual wearable file uploads with metadata."""
+
+    __tablename__ = 'wearable_files'
+    id = Column(String(36), primary_key=True)
+    consultation_id = Column(
+        Integer, ForeignKey('consultations.id'), nullable=False
+    )
+    filename = Column(String(255), nullable=False)
+    file_size = Column(Integer)
+    mime_type = Column(String(100))
+    uploaded_at = Column(DateTime)
+    extracted_data = Column(JSON)
+
+    consultation = relationship(
+        'Consultation', back_populates='wearable_files'
+    )

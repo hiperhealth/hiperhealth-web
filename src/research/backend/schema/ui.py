@@ -179,8 +179,38 @@ class ConsultationExam(ConsultationExamBase):
         from_attributes = True
 
 
+class WearableFileBase(BaseModel):
+    """Base model for wearable file uploads."""
+
+    filename: str = Field(..., max_length=255)
+    file_size: Optional[int] = None
+    mime_type: Optional[str] = Field(None, max_length=100)
+    uploaded_at: Optional[datetime] = None
+    extracted_data: Optional[Any] = None
+
+
+class WearableFileCreate(WearableFileBase):
+    """Schema for creating a new wearable file record."""
+
+    id: str = Field(..., max_length=36)
+    consultation_id: int
+
+
+class WearableFile(WearableFileBase):
+    """Complete wearable file schema with relationships."""
+
+    id: str = Field(..., max_length=36)
+    consultation_id: int
+
+    class Config:
+        """Pydantic config."""
+
+        from_attributes = True
+
+
 # Rebuild models to resolve forward references
 Patient.model_rebuild()
 Consultation.model_rebuild()
 ConsultationDiagnosis.model_rebuild()
 ConsultationExam.model_rebuild()
+WearableFile.model_rebuild()
