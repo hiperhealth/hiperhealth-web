@@ -137,6 +137,16 @@ class MedicalReportSkipResponse(BaseModel):
     next_step: str = Field(..., description='The next step to proceed to.')
 
 
+class WearableFileInfo(BaseModel):
+    """Metadata for a single uploaded wearable file."""
+
+    filename: str = Field(
+        ..., description='Original name of the uploaded file.'
+    )
+    file_size: int = Field(..., description='File size in bytes.')
+    mime_type: str = Field(..., description='MIME type of the uploaded file.')
+
+
 class WearableDataUploadResponse(BaseModel):
     """Response schema after uploading wearable data."""
 
@@ -144,8 +154,8 @@ class WearableDataUploadResponse(BaseModel):
         ...,
         description='Indicates if the wearable data upload was successful.',
     )
-    file_name: str = Field(
-        ..., description='Name of the uploaded wearable data file.'
+    uploaded_files: List[WearableFileInfo] = Field(
+        ..., description='Metadata for each uploaded wearable file.'
     )
     next_step: str = Field(..., description='The next step to proceed to.')
 
