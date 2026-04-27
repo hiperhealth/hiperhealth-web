@@ -265,13 +265,15 @@ export const consultationAPI={
 
     //Step 6: Wearable Data
     /**
-     * Upload wearable data
+     * Upload wearable data (supports multiple files).
      * POST /api/consultations/{patient_id}/wearable-data/upload
+     * @param {string} patientId
+     * @param {File[]} files - Array of File objects to upload
      */
-    async uploadWearableData(patientId,file){
+    async uploadWearableData(patientId,files){
         const formData=new FormData();
-        formData.append('file',file);
-        // TODO: add multiple file upload
+        files.forEach((file)=>formData.append('files',file));
+
         const response= await fetch(
             api(`/api/consultations/${patientId}/wearable-data/upload`),
             {
