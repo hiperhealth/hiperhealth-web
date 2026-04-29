@@ -266,7 +266,10 @@ export default function Exams() {
         <div className="mb-4">
           <div className="d-flex justify-content-between align-items-center mb-2">
             <small className="text-muted fw-semibold">Step 8 of 10</small>
-            <small className="text-muted">80% complete</small>
+            <div className="d-flex align-items-center gap-3">
+              <small className="text-muted">80% complete</small>
+              <Button variant="outline-secondary" size="sm" onClick={() => navigate('/')} title="Back to Dashboard">🏠</Button>
+            </div>
           </div>
           <ProgressBar now={80} style={{ height: '8px' }} />
         </div>

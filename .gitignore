@@ -152,3 +152,4 @@ research/backend/data
 research-poc/backend/backend.db
 uvicorn.log
 uvicorn.pid
+.qoder/

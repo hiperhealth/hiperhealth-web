@@ -33,4 +33,6 @@ case "$OS" in
     ;;
 esac
 
+# Install package with dev dependencies
+# Frontend dependencies are now installed automatically via setup.py
 pip install ".[dev]"
