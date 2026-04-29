@@ -1,7 +1,8 @@
 """Database configuration and session management."""
 
 import os
-
+from typing import Generator
+from sqlalchemy.orm import Session
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -21,7 +22,7 @@ SessionLocal = sessionmaker(
 Base = declarative_base()
 
 
-def get_db():
+def get_db() -> Generator[Session, None, None]:
     """Provide database session for dependency injection."""
     db = SessionLocal()
     try:
@@ -30,6 +31,6 @@ def get_db():
         db.close()
 
 
-def create_tables():
+def create_tables() -> None:
     """Create all tables based on SQLAlchemy models."""
     Base.metadata.create_all(bind=engine)

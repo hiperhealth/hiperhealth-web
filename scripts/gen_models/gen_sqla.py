@@ -117,12 +117,12 @@ def generate_sqla_model(name: str, model_cls: Type[BaseModel]) -> str:
         is_pk = field_name == 'id' and not inject_uuid_pk
 
         col_args = [
-            sa_type,
-            'primary_key=True' if is_pk else None,
-            'nullable=True' if nullable else None,
-            'index=True' if not is_pk else None,
-        ]
-        col_args = ', '.join(arg for arg in col_args if arg)
+        sa_type,
+       'primary_key=True' if is_pk else None,
+       'nullable=True' if nullable else None,
+       'index=True' if not is_pk else None,
+]
+col_args_str: list[str] = [arg for arg in col_args if arg is not None]
 
         default_token = 'None' if nullable else '...'
 
