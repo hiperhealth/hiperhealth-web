@@ -283,7 +283,14 @@ export const consultationAPI={
         )
 
         if(!response.ok){
-            throw new Error(`Upload Wearable data failed: ${response.status}`)
+            let errorMsg = `Upload Wearable data failed: ${response.status}`;
+            try {
+                const errorData = await response.json();
+                errorMsg = errorData.detail || JSON.stringify(errorData);
+            } catch (err) {
+                console.error('Failed to parse error JSON', err);
+            }
+            throw new Error(errorMsg);
         }
 
         return response.json();

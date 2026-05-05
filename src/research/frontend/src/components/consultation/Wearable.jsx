@@ -179,7 +179,10 @@ export default function Wearable() {
       );
 
       // Call backend API to upload (pass raw File objects)
-      await consultationAPI.uploadWearableData(state.patientId, selectedFiles);
+      const filesToUpload = selectedFiles.filter((f) => f instanceof File);
+      if (filesToUpload.length > 0) {
+        await consultationAPI.uploadWearableData(state.patientId, filesToUpload);
+      }
 
       // Update current step in context
       dispatch(consultationActions.setCurrentStep('diagnosis'));
