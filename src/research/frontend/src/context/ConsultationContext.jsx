@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 import { initialState, consultationReducer, consultationActions } from './ConsultationReducer';
 
@@ -16,16 +17,27 @@ export function ConsultationProvider({ children }) {
     initialState,
     (initial) => {
       try {
-        const tempSaved=localStorage.getItem('consultationState_temp');
-        if(tempSaved){
-          const parsed=JSON.parse(tempSaved);
-          if(parsed.patientId){
-            const patientSaved=localStorage.getItem(getStorageKey(parsed.patientId));
-            return patientSaved? JSON.parse(patientSaved):parsed;
+        const tempSaved = localStorage.getItem('consultationState_temp');
+        if (tempSaved) {
+          const parsed = JSON.parse(tempSaved);
+          let loadedState = parsed;
+          if (parsed.patientId) {
+            const patientSaved = localStorage.getItem(getStorageKey(parsed.patientId));
+            if (patientSaved) {
+                loadedState = JSON.parse(patientSaved);
+            }
+          }
+          // Merge loaded state with initial state to ensure all nested properties exist
+          return {
+            ...initial,
+            ...loadedState,
+            formData: {
+                ...initial.formData,
+                ...(loadedState.formData || {})
+            }
+          };
         }
-        return parsed;
-      }
-      return initial;
+        return initial;
       } catch (e) {
         console.error('Failed to load state:', e);
         return initial;
@@ -43,12 +55,7 @@ export function ConsultationProvider({ children }) {
       patientId: state.patientId,
       language: state.language,
       currentStep: state.currentStep,
-      formData:{
-       demographics: state.formData.demographics,
-       lifestyle: state.formData.lifestyle,
-       symptoms: state.formData.symptoms,
-       mental: state.formData.mental
-      },
+      formData: state.formData,
     };
     localStorage.setItem(key,JSON.stringify(stateToSave));
     localStorage.setItem('consultationState_temp',JSON.stringify(stateToSave));

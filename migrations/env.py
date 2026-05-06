@@ -17,6 +17,7 @@ if _backend_dir not in sys.path:
     sys.path.insert(0, _backend_dir)
 
 from app.database import SQLALCHEMY_DATABASE_URL  # noqa: E402
+from app.models import ui as _ui_models  # noqa: E402, F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -13,13 +13,13 @@ import {
   Badge,
 } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
+
 import { useConsultation, consultationActions } from '../../context/ConsultationContext';
 import consultationAPI from '../../services/api';
 
 export default function Wearable() {
   const navigate = useNavigate();
-  const { t } = useTranslation();
+
   const { state, dispatch } = useConsultation();
   const fileInputRef = useRef(null);
   const {
@@ -27,26 +27,30 @@ export default function Wearable() {
     formState: { isSubmitting },
   } = useForm();
 
-  useEffect(()=>{
+  useEffect(() => {
     if(!state.formData.wearableData){
       dispatch(consultationActions.updateWearableData({
-        file:null,
+        files:[],
         skipped:false,
       }))
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   },[]);
   const [apiError, setApiError] = useState(null);
-  const [selectedFile, setSelectedFile] = useState(
-    state.formData.wearableData?.file || null
+  const [selectedFiles, setSelectedFiles] = useState(
+    state.formData.wearableData?.files || []
   );
 
   const acceptedFormats = [
     'text/csv',
     'application/json',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/pdf',
+    'application/zip',
+    'application/x-zip-compressed',
   ];
 
-  const acceptedExtensions = '.csv, .json';
+  const acceptedExtensions = '.csv, .json, .xlsx, .pdf, .zip';
   const maxFileSize = 50 * 1024 * 1024; // 50MB for data exports
   const formatFileSize = (bytes) => {
     if (bytes === 0) return '0 Bytes';
@@ -59,6 +63,10 @@ export default function Wearable() {
   const getFileIcon = (type) => {
     if (type.includes('csv')) return '📊';
     if (type.includes('json')) return '📋';
+    if (type.includes('spreadsheet') || type.includes('xlsx')) return '📊';
+    if (type.includes('pdf')) return '📑';
+    if (type.includes('zip')) return '📦';
+    return '📄';
   };
 
   const handleFileSelect = (event) => {
@@ -67,29 +75,49 @@ export default function Wearable() {
 
     if (files.length === 0) return;
 
-    const file = files[0]; // Only one file for wearable data
+    const errors = [];
+    const validFiles = [];
 
-    // Check format
-    if (!acceptedFormats.includes(file.type)) {
-      setApiError(
-        `Invalid file format: ${file.name}. Accepted: CSV, JSON`
-      );
-      return;
+    for (const file of files) {
+      // Check format
+      if (!acceptedFormats.includes(file.type)) {
+        errors.push(
+          `Invalid file format: ${file.name}. Accepted: CSV, JSON, XLSX, PDF, ZIP`
+        );
+        continue;
+      }
+
+      // Check size
+      if (file.size > maxFileSize) {
+        errors.push(
+          `File too large: ${file.name} (${formatFileSize(file.size)}). Max: 50MB`
+        );
+        continue;
+      }
+
+      validFiles.push(file);
     }
 
-    // Check size
-    if (file.size > maxFileSize) {
-      setApiError(
-        `File too large: ${file.name} (${formatFileSize(file.size)}). Max: 50MB`
-      );
-      return;
+    if (errors.length > 0) {
+      setApiError(errors.join('\n'));
     }
 
-    setSelectedFile(file);
+    if (validFiles.length > 0) {
+      setSelectedFiles((prev) => {
+        const existingNames = new Set(prev.map((f) => f.name));
+        const newFiles = validFiles.filter((f) => !existingNames.has(f.name));
+        return [...prev, ...newFiles];
+      });
+    }
+
+    // Reset the input so re-selecting the same file works
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
-  const removeFile = () => {
-    setSelectedFile(null);
+  const removeFile = (index) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSkip = async () => {
@@ -104,7 +132,7 @@ export default function Wearable() {
       // Update local state
       dispatch(
         consultationActions.updateWearableData({
-          file: null,
+          files: [],
           skipped: true,
         })
       );
@@ -133,29 +161,28 @@ export default function Wearable() {
         throw new Error('Patient ID not found. Please start over.');
       }
 
-      if (!selectedFile) {
-        setApiError('Please select a file or click Skip');
+      if (selectedFiles.length === 0) {
+        setApiError('Please select at least one file or click Skip');
         return;
       }
-
-      // Create FormData for multipart upload
-      const formData = new FormData();
-      formData.append('file', selectedFile);
 
       // Update local state
       dispatch(
         consultationActions.updateWearableData({
-          file: {
-            name: selectedFile.name,
-            size: selectedFile.size,
-            type: selectedFile.type,
-          },
+          files: selectedFiles.map((f) => ({
+            name: f.name,
+            size: f.size,
+            type: f.type,
+          })),
           skipped: false,
         })
       );
 
-      // Call backend API to upload
-      await consultationAPI.uploadWearableData(state.patientId, formData);
+      // Call backend API to upload (pass raw File objects)
+      const filesToUpload = selectedFiles.filter((f) => f instanceof File);
+      if (filesToUpload.length > 0) {
+        await consultationAPI.uploadWearableData(state.patientId, filesToUpload);
+      }
 
       // Update current step in context
       dispatch(consultationActions.setCurrentStep('diagnosis'));
@@ -168,7 +195,7 @@ export default function Wearable() {
       window.scrollTo(0, 0);
     }
   };
-  const hasFile = selectedFile !== null;
+  const hasFiles = selectedFiles.length > 0;
 
   return (
     <div className="bg-light min-vh-100 py-4">
@@ -194,7 +221,7 @@ export default function Wearable() {
             className="mb-4"
           >
             <Alert.Heading>Error</Alert.Heading>
-            <p className="mb-0">{apiError}</p>
+            <p className="mb-0" style={{ whiteSpace: 'pre-line' }}>{apiError}</p>
           </Alert>
         )}
 
@@ -280,7 +307,7 @@ export default function Wearable() {
                       <strong>Click to upload or drag and drop</strong>
                     </p>
                     <p className="text-muted small mb-0">
-                      Supported formats: CSV, JSON, PDF, XLSX, ZIP (Max 50MB)
+                      Supported formats: CSV, JSON, PDF, XLSX, ZIP (Max 50MB per file)
                     </p>
                   </div>
 
@@ -291,36 +318,42 @@ export default function Wearable() {
                     accept={acceptedExtensions}
                     onChange={handleFileSelect}
                     style={{ display: 'none' }}
+                    multiple
                   />
                 </Form.Group>
               </div>
 
-              {/* Selected File Display */}
-              {hasFile && (
+              {/* Selected Files Display */}
+              {hasFiles && (
                 <div className="mb-5">
-                  <p className="fw-semibold mb-3">Selected File</p>
-                  <Card className="border-0 bg-light">
-                    <Card.Body className="d-flex justify-content-between align-items-center p-3">
-                      <div className="d-flex align-items-center gap-3">
-                        <span style={{ fontSize: '2rem' }}>
-                          {getFileIcon(selectedFile.type)}
-                        </span>
-                        <div>
-                          <p className="mb-1 fw-semibold">{selectedFile.name}</p>
-                          <small className="text-muted">
-                            {formatFileSize(selectedFile.size)}
-                          </small>
+                  <p className="fw-semibold mb-3">
+                    Selected Files
+                    <Badge bg="primary" className="ms-2">{selectedFiles.length}</Badge>
+                  </p>
+                  {selectedFiles.map((file, index) => (
+                    <Card className="border-0 bg-light mb-2" key={`${file.name}-${index}`}>
+                      <Card.Body className="d-flex justify-content-between align-items-center p-3">
+                        <div className="d-flex align-items-center gap-3">
+                          <span style={{ fontSize: '2rem' }}>
+                            {getFileIcon(file.type)}
+                          </span>
+                          <div>
+                            <p className="mb-1 fw-semibold">{file.name}</p>
+                            <small className="text-muted">
+                              {formatFileSize(file.size)}
+                            </small>
+                          </div>
                         </div>
-                      </div>
-                      <Button
-                        variant="outline-danger"
-                        size="sm"
-                        onClick={removeFile}
-                      >
-                        ✕
-                      </Button>
-                    </Card.Body>
-                  </Card>
+                        <Button
+                          variant="outline-danger"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                        >
+                          ✕
+                        </Button>
+                      </Card.Body>
+                    </Card>
+                  ))}
                 </div>
               )}
 
@@ -382,6 +415,9 @@ export default function Wearable() {
                       <ul className="text-muted small mb-0 ps-3">
                         <li>CSV (Comma Separated)</li>
                         <li>JSON (Data Export)</li>
+                        <li>XLSX (Excel Spreadsheet)</li>
+                        <li>PDF (Health Reports)</li>
+                        <li>ZIP (Bundled Export)</li>
                       </ul>
                     </Col>
                     <Col md={6}>
@@ -389,8 +425,8 @@ export default function Wearable() {
                         <strong>📋 Guidelines</strong>
                       </p>
                       <ul className="text-muted small mb-0 ps-3">
-                        <li>One file per upload</li>
-                        <li>Max 50MB file size</li>
+                        <li>Multiple files supported</li>
+                        <li>Max 50MB per file</li>
                         <li>Recent data preferred</li>
                         <li>Multiple metrics OK</li>
                       </ul>
@@ -438,7 +474,7 @@ export default function Wearable() {
                     type="submit"
                     variant="primary"
                     size="lg"
-                    disabled={isSubmitting || !hasFile}
+                    disabled={isSubmitting || !hasFiles}
                     className="d-flex align-items-center gap-2"
                   >
                     {isSubmitting ? (

@@ -35,7 +35,7 @@ load_dotenv(env_path)
 
 from app.database import SessionLocal
 from app.models.repositories import ResearchRepository
-from app.models.ui import Consultation, Patient
+from app.models.ui import Consultation, Patient, WearableFile
 from app.reports import (
     load_fhir_reports,
     process_uploaded_reports,
@@ -67,7 +67,9 @@ from app.schemas import (
     SymptomsRequest,
     WearableDataSkipResponse,
     WearableDataUploadResponse,
+    WearableFileInfo,
 )
+from app.wearable_formats import process_pdf, process_xlsx, process_zip
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -317,14 +319,35 @@ def patient_to_ui_data(patient: Patient) -> Dict[str, Any]:
         """Return True when field was provided but empty."""
         return isinstance(value, list) and len(value) == 0
 
-    wd: Optional[List[Any]] = (
-        consultation.wearable_data if consultation else None
-    )
-
-    wearable_data = {
-        'data': wd or [],
-        'skipped': _is_explicitly_skipped_list(wd),
-    }
+    # Prefer relational WearableFile rows; fall back to legacy JSON column.
+    wf_rows = consultation.wearable_files if consultation else []
+    if wf_rows:
+        # Aggregate extracted data for consumers that read flat list.
+        aggregated_data: List[Any] = []
+        for wf in wf_rows:
+            if isinstance(wf.extracted_data, list):
+                aggregated_data.extend(wf.extracted_data)
+        wearable_data = {
+            'files': [
+                {
+                    'name': wf.filename,
+                    'size': wf.file_size,
+                    'type': wf.mime_type,
+                }
+                for wf in wf_rows
+            ],
+            'data': aggregated_data,
+            'skipped': False,
+        }
+    else:
+        wd: Optional[List[Any]] = (
+            consultation.wearable_data if consultation else None
+        )
+        wearable_data = {
+            'files': [],
+            'data': wd or [],
+            'skipped': _is_explicitly_skipped_list(wd),
+        }
 
     # 7. Diagnosis
     diag_raw: Dict[str, Any] = (
@@ -386,7 +409,7 @@ def _get_next_step(patient: Patient) -> str:
         return 'mental'
     if consultation.previous_tests is None:
         return 'medical-reports'
-    if consultation.wearable_data is None:
+    if consultation.wearable_data is None and not consultation.wearable_files:
         return 'wearable-data'
     if not consultation.selected_diagnoses:
         return 'diagnosis'
@@ -493,7 +516,7 @@ def get_consultation_status(
             completed_steps.append('mental')
         if c.previous_tests is not None:
             completed_steps.append('medical-reports')
-        if c.wearable_data is not None:
+        if c.wearable_data is not None or c.wearable_files:
             completed_steps.append('wearable-data')
         if c.selected_diagnoses:
             completed_steps.append('diagnosis')
@@ -720,6 +743,18 @@ def get_medical_reports(
     )
 
 
+# File extension to MIME type mapping for wearable uploads.
+_WEARABLE_MIME_MAP: Dict[str, str] = {
+    '.csv': 'text/csv',
+    '.json': 'application/json',
+    '.xlsx': (
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ),
+    '.pdf': 'application/pdf',
+    '.zip': 'application/zip',
+}
+
+
 # Wearable data Upload
 @app.post(
     '/api/consultations/{patient_id}/wearable-data/upload',
@@ -727,36 +762,112 @@ def get_medical_reports(
 )
 async def upload_wearable_data(
     patient_id: str,
-    file: UploadFile = File(...),
+    files: List[UploadFile] = File(...),
     repo: ResearchRepository = Depends(get_repository),
-) -> StepResponse:
-    """Upload and Process wearable data."""
+) -> WearableDataUploadResponse:
+    """Upload and process wearable data files.
+
+    Accepts one or more files. Supports CSV, JSON, XLSX, PDF and ZIP
+    formats. Each file is stored as a ``WearableFile`` row with its
+    extracted data. The legacy ``consultation.wearable_data`` JSON
+    column is also populated (aggregated) for backward compatibility
+    with the AI diagnostic service.
+    """
     patient = repo.get_patient_by_uuid(patient_id)
     if not patient:
         raise HTTPException(status_code=404, detail='Patient not found')
 
     consultation = patient.consultations[-1]
 
-    if not file or file.size == 0:
-        raise HTTPException(status_code=400, detail='No file provided')
+    if not files:
+        raise HTTPException(status_code=400, detail='No files provided')
 
-    extractor = WearableDataFileExtractor()
-    try:
-        file_content = await file.read()
-        wearable_data = extractor.extract_wearable_data(
-            io.BytesIO(file_content)
-        )
-        consultation.wearable_data = wearable_data
-        repo.db.commit()
+    uploaded_file_infos: List[WearableFileInfo] = []
+    all_extracted: List[Any] = []
 
-        next_step = _get_next_step(patient)
-        return WearableDataUploadResponse(
-            success=True, file_name=file.filename, next_step=next_step
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=422, detail=f'Failed to process wearable data:{e}'
-        )
+    for file in files:
+        if not file or file.size == 0:
+            continue
+
+        # Determine extension from filename.
+        filename = file.filename or ''
+        ext = ''
+        dot_idx = filename.rfind('.')
+        if dot_idx != -1:
+            ext = filename[dot_idx:].lower()
+
+        if ext not in _WEARABLE_MIME_MAP:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f'Unsupported file format: {ext} ({filename}). '
+                    f'Accepted: CSV, JSON, XLSX, PDF, ZIP.'
+                ),
+            )
+
+        try:
+            file_content = await file.read()
+
+            if ext in ('.csv', '.json'):
+                extractor = WearableDataFileExtractor()
+                wearable_data = extractor.extract_wearable_data(
+                    io.BytesIO(file_content)
+                )
+            elif ext == '.xlsx':
+                wearable_data = process_xlsx(file_content)
+            elif ext == '.pdf':
+                wearable_data = process_pdf(file_content)
+            elif ext == '.zip':
+                wearable_data = process_zip(file_content)
+            else:
+                raise HTTPException(
+                    status_code=400, detail='Unsupported file format.'
+                )
+
+            # Create a WearableFile row for this file.
+            mime_type = _WEARABLE_MIME_MAP.get(ext, 'application/octet-stream')
+            wf = WearableFile(
+                id=str(uuid.uuid4()),
+                consultation_id=consultation.id,
+                filename=filename,
+                file_size=len(file_content),
+                mime_type=mime_type,
+                uploaded_at=datetime.utcnow(),
+                extracted_data=wearable_data,
+            )
+            repo.db.add(wf)
+
+            if isinstance(wearable_data, list):
+                all_extracted.extend(wearable_data)
+
+            uploaded_file_infos.append(
+                WearableFileInfo(
+                    filename=filename,
+                    file_size=len(file_content),
+                    mime_type=mime_type,
+                )
+            )
+        except HTTPException:
+            raise
+        except Exception as e:
+            raise HTTPException(
+                status_code=422,
+                detail=f'Failed to process wearable file {filename}: {e}',
+            )
+
+    if not uploaded_file_infos:
+        raise HTTPException(status_code=400, detail='No valid files provided')
+
+    # Backward compat: aggregate extracted data into the legacy JSON column.
+    consultation.wearable_data = all_extracted
+    repo.db.commit()
+
+    next_step = _get_next_step(patient)
+    return WearableDataUploadResponse(
+        success=True,
+        uploaded_files=uploaded_file_infos,
+        next_step=next_step,
+    )
 
 
 # Wearable data upload skip

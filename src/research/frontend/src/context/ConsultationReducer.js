@@ -28,7 +28,7 @@ export const initialState = {
       skipped: false,
     },
     wearableData: {
-      file: null,
+      files: [],
       skipped: false,
     },
     diagnosis: {

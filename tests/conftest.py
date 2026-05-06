@@ -15,6 +15,7 @@ import pytest
 BACKEND_DIR = Path(__file__).parents[1] / 'src' / 'research' / 'backend'
 sys.path.insert(0, str(BACKEND_DIR))
 
+# Ensure all models are imported so Base.metadata knows about them
 from app.main import app
 from app.models.repositories import ResearchRepository
 from app.models.ui import Base
@@ -89,24 +90,35 @@ def medical_extractor():
     return MedicalReportFileExtractor()
 
 
+from sqlalchemy.pool import StaticPool
+
 # Use an in-memory SQLite database for fast, isolated tests
 TEST_DB_URL = 'sqlite:///:memory:'
-engine = create_engine(TEST_DB_URL, connect_args={'check_same_thread': False})
+engine = create_engine(
+    TEST_DB_URL,
+    connect_args={'check_same_thread': False},
+    poolclass=StaticPool,
+)
 TestingSessionLocal = sessionmaker(
     autocommit=False, autoflush=False, bind=engine
 )
+
+
+from hiperhealth.models.sqla.fhirx import Base as FhirxBase
 
 
 @pytest.fixture(scope='function')
 def db_session():
     """Create a new database session for each test."""
     Base.metadata.create_all(bind=engine)
+    FhirxBase.metadata.create_all(bind=engine)
     session = TestingSessionLocal()
     try:
         yield session
     finally:
         session.close()
         Base.metadata.drop_all(bind=engine)
+        FhirxBase.metadata.drop_all(bind=engine)
 
 
 @pytest.fixture(scope='function')
@@ -115,7 +127,13 @@ def test_repo(db_session):
     return ResearchRepository(db_session)
 
 
+from app.main import get_db
+
+
 @pytest.fixture
-def client():
+def client(db_session):
     """FastAPI test client fixture."""
-    return TestClient(app)
+    app.dependency_overrides[get_db] = lambda: db_session
+    with TestClient(app) as c:
+        yield c
+    app.dependency_overrides.clear()
