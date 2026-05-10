@@ -19,7 +19,7 @@ from sqlalchemy.sql import func
 from .database import Base
 
 
-def gen_uuid():
+def gen_uuid() -> str:
     """Generate a UUID string for database IDs."""
     return str(uuid.uuid4())
 
@@ -115,9 +115,5 @@ class WearableData(Base):
     )
     recorded_at = Column(DateTime(timezone=True), nullable=True)
     metric = Column(String, nullable=True)  # e.g., "heart_rate", "steps"
-    value = Column(Numeric, nullable=True)
-    raw = Column(JSON, nullable=True)
-    recorded_at = Column(DateTime(timezone=True), nullable=True)
-    metric = Column(String, nullable=False)
     value = Column(Numeric, nullable=True)
     raw = Column(JSON, nullable=True)

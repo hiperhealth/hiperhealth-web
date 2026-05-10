@@ -22,6 +22,9 @@ import io
 import logging
 import uuid
 
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+
+app = FastAPI()
 from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
@@ -68,7 +71,6 @@ from app.schemas import (
     WearableDataSkipResponse,
     WearableDataUploadResponse,
 )
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from hiperhealth.agents.diagnostics import core as diag
@@ -111,11 +113,9 @@ def get_repository(
 
 
 # --- App Initialization ---
-_STATIC = StaticFiles(directory=APP_DIR / 'static')
-app = FastAPI(title='TeleHealthCareAI Physician Portal API')
-app.mount('/static', _STATIC, name='static')
-
-
+static_path = APP_DIR / 'static'
+static_path.mkdir(parents=True, exist_ok=True)
+_STATIC = StaticFiles(directory=static_path)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=['http://localhost:5173', 'http://localhost:3000', '*'],

@@ -3,7 +3,7 @@
 import json
 import logging
 import sys
-
+from typing import Any
 from pathlib import Path
 
 # Add the project root to the Python path to allow for imports
@@ -25,7 +25,7 @@ def configure_logging(level: int = logging.INFO) -> None:
     )
 
 
-def migrate_data():
+def migrate_data() -> None:
     """Migrate patient data from JSON to the database."""
     db = SessionLocal()
     repo = ResearchRepository(db_session=db)
@@ -40,8 +40,8 @@ def migrate_data():
     )
 
     logger.info('Loading data from %s...', json_path)
-    with open(json_path, 'r') as f:
-        patient_records = json.load(f)
+    with open(json_path, 'r', encoding='utf-8') as f:
+        patient_records: list[dict[str, Any]] = json.load(f)
 
     logger.info('Found %d patient records to migrate.', len(patient_records))
 

@@ -122,20 +122,23 @@ def generate_sqla_model(name: str, model_cls: Type[BaseModel]) -> str:
             'nullable=True' if nullable else None,
             'index=True' if not is_pk else None,
         ]
-        col_args = ', '.join(arg for arg in col_args if arg)
+
+        col_args_str: list[str] = [arg for arg in col_args if arg is not None]
 
         default_token = 'None' if nullable else '...'
 
-        lines.append(
-            f'    {field_name}: Mapped[{py_hint}] = mapped_column('
-            f'{col_args}, default={default_token})'
-            if field_name != 'id'
-            else (
-                f'    {field_name}: Mapped[{py_hint}] = '
-                f'mapped_column({col_args})'
-            )
-        )
+        col_definition = ', '.join(col_args_str)
 
+        if field_name != 'id':
+            lines.append(
+                f'    {field_name}: Mapped[{py_hint}] = '
+                f'mapped_column({col_definition}, default={default_token})'
+            )
+        else:
+            lines.append(
+                f'    {field_name}: Mapped[{py_hint}] = '
+                f'mapped_column({col_definition})'
+            )
     lines.append('')
     return '\n'.join(lines)
 
@@ -207,4 +210,4 @@ def main() -> None:
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    main()

@@ -6,7 +6,7 @@ from typing import Optional
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from . import models
+from app import models
 
 
 def create_patient(db: Session, *, name: Optional[str] = None):

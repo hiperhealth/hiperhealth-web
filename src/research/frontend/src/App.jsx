@@ -13,11 +13,14 @@ import Wearable from "./components/consultation/Wearable";
 import Diagnosis from "./components/consultation/Diagnosis";
 import Exam from "./components/consultation/Exam";
 import Confirmation from "./components/consultation/Confirmation";
-
+import Navbar from "./components/Navbar";
 
 export default function App() {
   return (
       <Router>
+         {/* Navbar outside Routes to show on every page */}
+      <Navbar />
+
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/patients/:id" element={<PatientView />} />
