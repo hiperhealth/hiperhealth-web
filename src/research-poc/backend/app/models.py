@@ -117,4 +117,3 @@ class WearableData(Base):
     metric = Column(String, nullable=True)  # e.g., "heart_rate", "steps"
     value = Column(Numeric, nullable=True)
     raw = Column(JSON, nullable=True)
-    
