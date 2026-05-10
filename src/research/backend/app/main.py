@@ -22,7 +22,7 @@ import io
 import logging
 import uuid
 
-from datetime import datetime
+from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, Dict, Generator, List, Optional
@@ -166,7 +166,7 @@ def patient_to_dict(patient: Patient) -> Dict[str, Any]:
 
     consultation = patient.consultations[-1] if patient.consultations else None
 
-    patient_dict = {
+    patient_dict: Dict[str, Any] = {
         'meta': {
             'uuid': patient.uuid,
             'lang': consultation.lang if consultation else None,
@@ -241,7 +241,7 @@ def patient_to_dict(patient: Patient) -> Dict[str, Any]:
         ]
         for field in consultation_fields:
             if hasattr(consultation, field):
-                patient_dict['patient'][field] = getattr(consultation, field)  # type: ignore[call-overload]
+                patient_dict['patient'][field] = getattr(consultation, field)
 
     return patient_dict
 
@@ -424,7 +424,7 @@ def create_new_patient(
     return CreatePatientResponse(
         patient_id=patient_uuid,
         lang=req.lang,
-        created_at=datetime.utcnow().isoformat(),
+        created_at=datetime.now(timezone.utc).isoformat(),
     )
 
 
@@ -900,7 +900,7 @@ def submit_exams_selection(
     record = patient_to_dict(patient)
     record['selected_exams'] = req.selected_exams
     record['evaluations']['ai_exam'] = req.evaluations
-    record['meta']['timestamp'] = datetime.utcnow().isoformat()
+    record['meta']['timestamp'] = datetime.now(timezone.utc).isoformat()
 
     deidentified_record = deidentify_patient_record(record, deidentifier)
     repo.update_consultation(patient_id, deidentified_record)

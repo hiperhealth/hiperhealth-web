@@ -1,4 +1,4 @@
-name: hiperhealth
+name: hiperhealth-web
 channels:
   - conda-forge
   - nodefaults
