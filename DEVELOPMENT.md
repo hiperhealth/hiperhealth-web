@@ -10,7 +10,7 @@ Thank you for your interest in contributing to HiperHealth Web!
 2. Install dependencies:
    ```bash
    conda env create -f conda/dev.yaml
-   conda activate hiperhealth
+   conda activate hiperhealth-web
    ./scripts/install-dev.sh
    ```
 
