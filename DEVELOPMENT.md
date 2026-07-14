@@ -57,3 +57,13 @@ makim docs.build
 
 For more details, see the
 [Pull Request Template](.github/PULL_REQUEST_TEMPLATE.md).
+
+Report Bugs
+
+If you find a bug, please look at the
+[issue tracker](https://github.com/hiperhealth/hiperhealth-web/issues/new).
+
+## Submit Feedback
+
+The best way to send feedback is to file an issue at the
+[issue tracker](https://github.com/hiperhealth/hiperhealth-web/issues).
